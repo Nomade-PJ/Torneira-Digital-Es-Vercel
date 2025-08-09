@@ -27,21 +27,35 @@ export function useAuth() {
       }
     }
 
-    // Verificar se já há uma sessão no localStorage para acelerar o processo
-    try {
-      const keys = Object.keys(localStorage).filter(key => key.includes('supabase.auth.token'))
-      if (keys.length === 0) {
-        // Se não há sessão local, não precisa esperar
+    // Verificar sessão inicial de forma mais robusta
+    const initializeAuth = async () => {
+      try {
+        // Verificar se há sessão no localStorage primeiro
+        if (typeof window !== 'undefined') {
+          const keys = Object.keys(localStorage).filter(key => 
+            key.includes('supabase.auth.token') || key.includes('sb-') && key.includes('auth-token')
+          )
+          
+          if (keys.length === 0) {
+            // Se não há tokens, usuário não está logado
+            setLoading(false)
+            setUser(null)
+            setSession(null)
+            return
+          }
+        }
+        
+        // Se há tokens, verificar sessão no servidor
+        await getInitialSession()
+      } catch (error) {
+        console.warn("Erro ao inicializar auth:", error)
         setLoading(false)
         setUser(null)
         setSession(null)
-      } else {
-        getInitialSession()
       }
-    } catch (error) {
-      // Fallback se localStorage não estiver disponível (SSR)
-      getInitialSession()
     }
+
+    initializeAuth()
 
     // Escutar mudanças de autenticação
     const {

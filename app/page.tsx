@@ -1,22 +1,7 @@
-"use client"
+import { redirect } from "next/navigation"
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { useAuthContext } from "@/components/providers/auth-provider"
-
+// Página inicial que redireciona diretamente para login
 export default function HomePage() {
-  const router = useRouter()
-  const { user, loading } = useAuthContext()
-
-  useEffect(() => {
-    // Redirecionamento imediato sem mostrar loading
-    if (user) {
-      router.replace("/dashboard")
-    } else {
-      router.replace("/login")
-    }
-  }, [user, router])
-
-  // Retorna null para não mostrar nada durante o redirecionamento
-  return null
+  // Redirecionamento server-side para evitar loops
+  redirect("/login")
 }
