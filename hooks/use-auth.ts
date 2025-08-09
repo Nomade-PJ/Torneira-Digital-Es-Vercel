@@ -40,9 +40,10 @@ export function useAuth() {
         if (isProduction) {
           console.log("🏭 Ambiente de produção - obtendo sessão diretamente")
           
-          // Tentar até 3 vezes com delay
+          // Tentar até 5 vezes com delays progressivos otimizados
           let attempts = 0
-          const maxAttempts = 3
+          const maxAttempts = 5
+          const delays = [0, 100, 250, 500, 1000] // Delays em milissegundos: imediato, 100ms, 250ms, 500ms, 1s
           
           while (attempts < maxAttempts) {
             attempts++
@@ -64,9 +65,11 @@ export function useAuth() {
               console.log(`⚠️ Nenhuma sessão na tentativa ${attempts}`)
             }
             
-            // Se não é a última tentativa, aguardar 1 segundo
+            // Se não é a última tentativa, aguardar com delay progressivo
             if (attempts < maxAttempts) {
-              await new Promise(resolve => setTimeout(resolve, 1000))
+              const delay = delays[attempts - 1] || 1000
+              console.log(`⏱️ Aguardando ${delay}ms antes da próxima tentativa`)
+              await new Promise(resolve => setTimeout(resolve, delay))
             }
           }
           

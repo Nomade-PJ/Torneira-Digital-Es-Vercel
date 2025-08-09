@@ -28,6 +28,13 @@ const configuracoesDefault: Partial<NovaConfiguracao> = {
   dias_relatorio_padrao: 30,
 }
 
+// Cache em memória para configurações (otimização de performance)
+const configuracoesCache = new Map<string, {
+  data: Configuracao,
+  timestamp: number,
+  expiryTime: number
+}>()
+
 export function useConfiguracoes() {
   const [configuracoes, setConfiguracoes] = useState<Configuracao | null>(null)
   const [loading, setLoading] = useState(false)
@@ -40,6 +47,17 @@ export function useConfiguracoes() {
   const fetchConfiguracoes = async (forceReload = false) => {
     if (!user?.id) {
       setConfiguracoes(null)
+      return
+    }
+
+    // Verificar cache primeiro (válido por 5 minutos)
+    const cacheKey = user.id
+    const cached = configuracoesCache.get(cacheKey)
+    const now = Date.now()
+    
+    if (!forceReload && cached && now < cached.expiryTime) {
+      console.log("📦 Configurações carregadas do cache")
+      setConfiguracoes(cached.data)
       return
     }
 
@@ -91,6 +109,13 @@ export function useConfiguracoes() {
             console.log("✅ Configurações auto-preenchidas com dados do usuário")
           }
         }
+
+        // Salvar no cache (válido por 5 minutos)
+        configuracoesCache.set(cacheKey, {
+          data,
+          timestamp: now,
+          expiryTime: now + (5 * 60 * 1000) // 5 minutos
+        })
 
         setConfiguracoes(data)
       } else {

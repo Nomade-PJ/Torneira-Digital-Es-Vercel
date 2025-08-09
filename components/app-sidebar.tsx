@@ -136,13 +136,20 @@ export function AppSidebar() {
                   </Avatar>
                   <div className="flex flex-col items-start text-left">
                     <span className="text-sm font-medium">
-                      {loading ? "Carregando..." : 
-                       configuracoes?.nome_estabelecimento || 
-                       user?.user_metadata?.nome_estabelecimento || 
-                       (user ? "Estabelecimento" : "Não logado")}
+                      {loading ? (
+                        <span className="animate-pulse bg-slate-700 h-4 w-20 rounded"></span>
+                      ) : (
+                        configuracoes?.nome_estabelecimento || 
+                        user?.user_metadata?.nome_estabelecimento || 
+                        (user ? "Estabelecimento" : "Não logado")
+                      )}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {loading ? "..." : user ? "Administrador" : "Faça login"}
+                      {loading ? (
+                        <span className="animate-pulse bg-slate-700 h-3 w-16 rounded"></span>
+                      ) : (
+                        user ? "Administrador" : "Faça login"
+                      )}
                     </span>
                   </div>
                   <ChevronUp className="ml-auto w-4 h-4" />
