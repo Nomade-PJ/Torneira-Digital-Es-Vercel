@@ -31,11 +31,53 @@ export function useAuth() {
     const initializeAuth = async () => {
       // Definir chave do localStorage fora do try-catch
       const supabaseKey = `sb-${process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]?.split('.')[0] || 'default'}-auth-token`
+      const isProduction = process.env.NODE_ENV === 'production'
       
       try {
         setLoading(true)
         
-        // Primeiro, verificar se há sessão no localStorage
+        // Em produção, sempre tentar obter sessão diretamente do Supabase
+        if (isProduction) {
+          console.log("🏭 Ambiente de produção - obtendo sessão diretamente")
+          
+          // Tentar até 3 vezes com delay
+          let attempts = 0
+          const maxAttempts = 3
+          
+          while (attempts < maxAttempts) {
+            attempts++
+            console.log(`🔄 Tentativa ${attempts}/${maxAttempts}`)
+            
+            const { data: { session }, error } = await supabase.auth.getSession()
+            
+            if (!error && session?.user) {
+              console.log("✅ Sessão obtida em produção:", session.user.email)
+              setSession(session)
+              setUser(session.user)
+              setLoading(false)
+              return
+            }
+            
+            if (error) {
+              console.warn(`❌ Erro na tentativa ${attempts}:`, error)
+            } else {
+              console.log(`⚠️ Nenhuma sessão na tentativa ${attempts}`)
+            }
+            
+            // Se não é a última tentativa, aguardar 1 segundo
+            if (attempts < maxAttempts) {
+              await new Promise(resolve => setTimeout(resolve, 1000))
+            }
+          }
+          
+          console.log("❌ Todas as tentativas falharam")
+          setSession(null)
+          setUser(null)
+          setLoading(false)
+          return
+        }
+        
+        // Em desenvolvimento, verificar localStorage primeiro
         const storedSession = localStorage.getItem(supabaseKey) || localStorage.getItem('supabase.auth.token')
         
         if (!storedSession) {

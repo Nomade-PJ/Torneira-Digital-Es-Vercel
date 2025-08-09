@@ -3,15 +3,37 @@ import { createClient } from "@supabase/supabase-js"
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// Configurações otimizadas para performance e persistência
+// Configurações otimizadas para produção (Vercel)
 const supabaseOptions = {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true, // Habilitar para detectar sessão na URL
-    flowType: 'pkce' as const, // Usar PKCE flow para melhor segurança
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    storageKey: 'supabase.auth.token',
+    detectSessionInUrl: false, // Desabilitar para evitar problemas na Vercel
+    flowType: 'implicit' as const, // Usar implicit flow para melhor compatibilidade
+    storage: typeof window !== 'undefined' ? {
+      getItem: (key: string) => {
+        try {
+          return window.localStorage.getItem(key)
+        } catch {
+          return null
+        }
+      },
+      setItem: (key: string, value: string) => {
+        try {
+          window.localStorage.setItem(key, value)
+        } catch {
+          // Falha silenciosa se localStorage não disponível
+        }
+      },
+      removeItem: (key: string) => {
+        try {
+          window.localStorage.removeItem(key)
+        } catch {
+          // Falha silenciosa se localStorage não disponível
+        }
+      }
+    } : undefined,
+    storageKey: `sb-${supabaseUrl.split('//')[1]?.split('.')[0] || 'default'}-auth-token`,
   },
   db: {
     schema: 'public',
@@ -22,10 +44,10 @@ const supabaseOptions = {
       'Content-Type': 'application/json',
     },
   },
-  // Pool de conexões para melhor performance
+  // Configurações otimizadas para Vercel
   realtime: {
     params: {
-      eventsPerSecond: 10
+      eventsPerSecond: 5 // Reduzido para produção
     }
   }
 }

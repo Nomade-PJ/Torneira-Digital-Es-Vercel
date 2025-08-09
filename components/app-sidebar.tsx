@@ -59,7 +59,7 @@ const menuItems = [
 export function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const { signOut, user } = useAuthContext()
+  const { signOut, user, loading } = useAuthContext()
   const { configuracoes } = useConfiguracoes()
 
   const handleLogout = async () => {
@@ -136,9 +136,14 @@ export function AppSidebar() {
                   </Avatar>
                   <div className="flex flex-col items-start text-left">
                     <span className="text-sm font-medium">
-                      {configuracoes?.nome_estabelecimento || user?.user_metadata?.nome_estabelecimento || "Estabelecimento"}
+                      {loading ? "Carregando..." : 
+                       configuracoes?.nome_estabelecimento || 
+                       user?.user_metadata?.nome_estabelecimento || 
+                       (user ? "Estabelecimento" : "Não logado")}
                     </span>
-                    <span className="text-xs text-muted-foreground">Administrador</span>
+                    <span className="text-xs text-muted-foreground">
+                      {loading ? "..." : user ? "Administrador" : "Faça login"}
+                    </span>
                   </div>
                   <ChevronUp className="ml-auto w-4 h-4" />
                 </SidebarMenuButton>
