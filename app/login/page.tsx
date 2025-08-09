@@ -5,6 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useAuthContext } from "@/components/providers/auth-provider"
 import { registroSchema, loginSchema, forgotPasswordSchema, formatCpfCnpj } from "@/lib/validations"
+import { AuthDebug } from "@/components/auth-debug"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -526,6 +527,9 @@ export default function LoginPage() {
           )}
         </DialogContent>
       </Dialog>
+      
+      {/* Debug component - only in development */}
+      <AuthDebug />
     </div>
   )
 }

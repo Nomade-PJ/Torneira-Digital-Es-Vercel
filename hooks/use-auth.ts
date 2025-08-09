@@ -29,12 +29,32 @@ export function useAuth() {
 
     // Verificar sessão inicial de forma mais robusta
     const initializeAuth = async () => {
+      // Definir chave do localStorage fora do try-catch
+      const supabaseKey = `sb-${process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]?.split('.')[0] || 'default'}-auth-token`
+      
       try {
-        // Sempre tentar obter a sessão do Supabase primeiro
+        setLoading(true)
+        
+        // Primeiro, verificar se há sessão no localStorage
+        const storedSession = localStorage.getItem(supabaseKey) || localStorage.getItem('supabase.auth.token')
+        
+        if (!storedSession) {
+          console.log("🔍 Nenhuma sessão armazenada encontrada")
+          setLoading(false)
+          setUser(null)
+          setSession(null)
+          return
+        }
+
+        // Se há sessão armazenada, tentar recuperar do Supabase
+        console.log("🔍 Sessão armazenada encontrada, recuperando...")
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
-          console.warn("Erro ao obter sessão:", error)
+          console.warn("❌ Erro ao obter sessão:", error)
+          // Limpar sessão corrompida
+          localStorage.removeItem(supabaseKey)
+          localStorage.removeItem('supabase.auth.token')
           setLoading(false)
           setUser(null)
           setSession(null)
@@ -42,16 +62,22 @@ export function useAuth() {
         }
 
         if (session?.user) {
+          console.log("✅ Sessão recuperada com sucesso:", session.user.email)
           setSession(session)
           setUser(session.user)
         } else {
+          console.log("⚠️ Sessão expirada ou inválida")
+          localStorage.removeItem(supabaseKey)
+          localStorage.removeItem('supabase.auth.token')
           setSession(null)
           setUser(null)
         }
         
         setLoading(false)
       } catch (error) {
-        console.warn("Erro ao inicializar auth:", error)
+        console.warn("❌ Erro ao inicializar auth:", error)
+        localStorage.removeItem(supabaseKey)
+        localStorage.removeItem('supabase.auth.token')
         setLoading(false)
         setUser(null)
         setSession(null)
