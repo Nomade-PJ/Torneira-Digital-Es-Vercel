@@ -209,7 +209,7 @@ export function useClientes() {
 
   useEffect(() => {
     fetchClientes()
-  }, [user])
+  }, [user?.id])
 
   return {
     clientes,

@@ -38,7 +38,10 @@ export function useConfiguracoes() {
 
   // Buscar configurações do usuário
   const fetchConfiguracoes = async (forceReload = false) => {
-    if (!user) return
+    if (!user?.id) {
+      setConfiguracoes(null)
+      return
+    }
 
     try {
       // Loading removido - carregamento instantâneo
@@ -325,8 +328,14 @@ export function useConfiguracoes() {
   }
 
   useEffect(() => {
-    fetchConfiguracoes()
-  }, [user])
+    // Só buscar configurações quando o user estiver completamente carregado
+    if (user?.id) {
+      fetchConfiguracoes()
+    } else if (user === null) {
+      // Se user é null (não logado), limpar configurações
+      setConfiguracoes(null)
+    }
+  }, [user?.id])
 
   // Realizar backup automático periodicamente
   useEffect(() => {

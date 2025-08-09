@@ -213,8 +213,15 @@ export function useProdutos() {
   }
 
   useEffect(() => {
-    fetchProdutos()
-  }, [user])
+    // Só buscar produtos quando o user estiver completamente carregado
+    if (user?.id) {
+      fetchProdutos()
+    } else if (user === null) {
+      // Se user é null (não logado), limpar produtos
+      setProdutos([])
+      setLoading(false)
+    }
+  }, [user?.id])
 
   return {
     produtos,

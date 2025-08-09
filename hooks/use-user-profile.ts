@@ -163,8 +163,15 @@ export function useUserProfile() {
   }
 
   useEffect(() => {
-    fetchProfile()
-  }, [user])
+    // Só buscar perfil quando o user estiver completamente carregado
+    if (user?.id) {
+      fetchProfile()
+    } else if (user === null) {
+      // Se user é null (não logado), limpar perfil
+      setProfile(null)
+      setLoading(false)
+    }
+  }, [user?.id])
 
   return {
     profile,

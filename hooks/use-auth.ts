@@ -30,23 +30,26 @@ export function useAuth() {
     // Verificar sessão inicial de forma mais robusta
     const initializeAuth = async () => {
       try {
-        // Verificar se há sessão no localStorage primeiro
-        if (typeof window !== 'undefined') {
-          const keys = Object.keys(localStorage).filter(key => 
-            key.includes('supabase.auth.token') || key.includes('sb-') && key.includes('auth-token')
-          )
-          
-          if (keys.length === 0) {
-            // Se não há tokens, usuário não está logado
-            setLoading(false)
-            setUser(null)
-            setSession(null)
-            return
-          }
+        // Sempre tentar obter a sessão do Supabase primeiro
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.warn("Erro ao obter sessão:", error)
+          setLoading(false)
+          setUser(null)
+          setSession(null)
+          return
+        }
+
+        if (session?.user) {
+          setSession(session)
+          setUser(session.user)
+        } else {
+          setSession(null)
+          setUser(null)
         }
         
-        // Se há tokens, verificar sessão no servidor
-        await getInitialSession()
+        setLoading(false)
       } catch (error) {
         console.warn("Erro ao inicializar auth:", error)
         setLoading(false)

@@ -411,7 +411,7 @@ export function useVendas() {
 
   useEffect(() => {
     fetchVendas()
-  }, [user])
+  }, [user?.id])
 
   return {
     vendas,
