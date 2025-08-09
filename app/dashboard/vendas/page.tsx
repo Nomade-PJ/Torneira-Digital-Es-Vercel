@@ -97,7 +97,7 @@ export default function VendasPage() {
         }
         
         // Adicionar produto ao carrinho
-        await adicionarItemCarrinho(produto.id)
+        await adicionarItemCarrinho(produto)
         
         toast({
           title: "Produto adicionado!",
