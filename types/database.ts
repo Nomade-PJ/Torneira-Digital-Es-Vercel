@@ -308,6 +308,7 @@ export interface Database {
           telefone: string | null
           endereco: string | null
           cpf_cnpj: string | null
+          tipo: "pessoa_fisica" | "pessoa_juridica" | "consumidor_final"
           observacoes: string | null
           ativo: boolean
           created_at: string
@@ -321,6 +322,7 @@ export interface Database {
           telefone?: string | null
           endereco?: string | null
           cpf_cnpj?: string | null
+          tipo?: "pessoa_fisica" | "pessoa_juridica" | "consumidor_final"
           observacoes?: string | null
           ativo?: boolean
           created_at?: string
@@ -334,6 +336,7 @@ export interface Database {
           telefone?: string | null
           endereco?: string | null
           cpf_cnpj?: string | null
+          tipo?: "pessoa_fisica" | "pessoa_juridica" | "consumidor_final"
           observacoes?: string | null
           ativo?: boolean
           created_at?: string

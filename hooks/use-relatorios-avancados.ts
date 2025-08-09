@@ -525,7 +525,7 @@ export function useRelatoriosAvancados() {
       // Estatísticas comparativas
       if (estatisticasComparativas) {
         doc.setFontSize(14)
-        doc.setFont(undefined, 'bold')
+        doc.setFont('helvetica', 'bold')
         doc.text('Resumo Executivo', 20, yPosition)
         yPosition += 10
 
@@ -556,7 +556,7 @@ export function useRelatoriosAvancados() {
         }
 
         doc.setFontSize(14)
-        doc.setFont(undefined, 'bold')
+        doc.setFont('helvetica', 'bold')
         doc.text('Top 10 Produtos', 20, yPosition)
         yPosition += 10
 
@@ -586,7 +586,7 @@ export function useRelatoriosAvancados() {
         }
 
         doc.setFontSize(14)
-        doc.setFont(undefined, 'bold')
+        doc.setFont('helvetica', 'bold')
         doc.text('Top 10 Clientes', 20, yPosition)
         yPosition += 10
 

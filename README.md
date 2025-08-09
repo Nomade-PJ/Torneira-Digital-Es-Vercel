@@ -1,16 +1,19 @@
 # 🍺 Torneira Digital
 
-Sistema completo de gestão de estoque para estabelecimentos, desenvolvido com Next.js 15, React 19, Supabase e Tailwind CSS.
+Sistema ERP completo especializado para distribuidores de bebidas, desenvolvido com Next.js 15, React 19, Supabase e Tailwind CSS.
 
 ## ✨ Funcionalidades
 
-- 🏪 **PDV (Ponto de Venda)** - Sistema de vendas completo
-- 📦 **Gestão de Estoque** - Controle total de produtos e movimentações
-- 📊 **Relatórios Avançados** - Analytics e dashboards
-- 👥 **Gestão de Clientes** - Cadastro e histórico
-- ⚙️ **Configurações** - Personalização do sistema
-- 📱 **Mobile First** - Totalmente responsivo e otimizado para dispositivos móveis
-- ⚡ **Performance Ultra-Rápida** - Carregamento em milissegundos
+### 🔥 Implementadas e Funcionais
+- 🔐 **Sistema de Autenticação** - Login/registro com Supabase Auth
+- 📦 **Gestão de Estoque** - CRUD completo de produtos com controle de estoque
+- 📊 **Movimentações** - Controle de entradas e saídas com histórico
+- 📈 **Relatórios** - Dashboard com KPIs, gráficos e exportação PDF
+- ⚙️ **Configurações** - Personalização completa do sistema
+- 👥 **Gestão de Clientes** - Cadastro e controle de clientes
+- 🛍️ **Sistema de Vendas** - PDV com carrinho de compras (parcial)
+- 📱 **Mobile First** - Interface responsiva otimizada para dispositivos móveis
+- ⚡ **Performance** - Build otimizado e carregamento rápido
 
 ## 🚀 Tecnologias
 
@@ -28,7 +31,7 @@ Sistema completo de gestão de estoque para estabelecimentos, desenvolvido com N
 ### Pré-requisitos
 
 - Node.js 18+ 
-- npm ou yarn
+- npm (recomendado)
 - Conta no Supabase
 
 ### Passo a passo
@@ -39,12 +42,17 @@ Sistema completo de gestão de estoque para estabelecimentos, desenvolvido com N
    cd Torneira-Digital
    \`\`\`
 
-2. **Instale as dependências**
-   \`\`\`bash
-   npm install
+2. **Configure as políticas do PowerShell (Windows)**
+   \`\`\`powershell
+   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
    \`\`\`
 
-3. **Configure as variáveis de ambiente**
+3. **Instale as dependências**
+   \`\`\`bash
+   npm install --legacy-peer-deps
+   \`\`\`
+
+4. **Configure as variáveis de ambiente**
    
    Crie um arquivo \`.env.local\` na raiz do projeto:
    \`\`\`env
@@ -52,12 +60,12 @@ Sistema completo de gestão de estoque para estabelecimentos, desenvolvido com N
    NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_anonima_do_supabase
    \`\`\`
 
-4. **Execute o projeto**
+5. **Execute o projeto**
    \`\`\`bash
    npm run dev
    \`\`\`
 
-5. **Acesse**
+6. **Acesse**
    
    Abra [http://localhost:3000](http://localhost:3000) no seu navegador
 
@@ -174,9 +182,49 @@ npm run build
 # Iniciar em produção
 npm run start
 
-# Linting
+# Verificação de tipos
+npm run type-check
+
+# Linting (configurado)
 npm run lint
 \`\`\`
+
+## 🚦 Status do Projeto
+
+### ✅ Funcional e Testado
+- ✅ Autenticação e registro de usuários
+- ✅ CRUD completo de produtos
+- ✅ Controle de movimentações de estoque
+- ✅ Dashboard com relatórios básicos
+- ✅ Sistema de configurações
+- ✅ Gestão de clientes
+- ✅ Interface mobile responsiva
+- ✅ Build otimizado para produção
+
+### 🔄 Em Desenvolvimento
+- 🔄 Sistema de vendas (PDV) - 80% completo
+- 🔄 Relatórios avançados - necessita correção
+- 🔄 Múltiplas formas de pagamento
+- 🔄 Sistema de notificações
+
+### 📋 Próximas Funcionalidades
+- 📋 Gestão de fornecedores
+- 📋 Controle financeiro
+- 📋 Sistema de backup automático
+- 📋 Integração com APIs externas
+
+## 🛠️ Problemas Conhecidos
+
+### Solucionados ✅
+- ✅ Erros de TypeScript corrigidos
+- ✅ Problemas de build resolvidos
+- ✅ Configuração ESLint ajustada
+- ✅ Dependências do React 19 compatibilizadas
+
+### Em Monitoramento 👀
+- 👀 Performance dos gráficos em dispositivos móveis
+- 👀 Otimização de queries do Supabase
+- 👀 Cache de dados para melhor UX
 
 ## 🏗️ Estrutura do Projeto
 

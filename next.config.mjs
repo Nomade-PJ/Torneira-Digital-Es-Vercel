@@ -5,22 +5,21 @@ const nextConfig = {
     ignoreDuringBuilds: false, // Habilitar ESLint na build
   },
   typescript: {
-    ignoreBuildErrors: true, // Temporário: ignorar para deploy
+    ignoreBuildErrors: false, // Habilitado após correções
   },
   images: {
     unoptimized: false, // Habilitar otimização de imagens
     domains: [], // Adicionar domínios se necessário
   },
   devIndicators: {
-    buildActivity: false,
-    buildActivityPosition: 'bottom-right',
+    position: 'bottom-right',
   },
   // Otimizações para performance
   compress: true,
   poweredByHeader: false,
-  // Configuração para Edge Runtime
+  // Configurações experimentais
   experimental: {
-    runtime: 'nodejs',
+    // Configurações futuras aqui
   },
   // Headers de segurança
   async headers() {

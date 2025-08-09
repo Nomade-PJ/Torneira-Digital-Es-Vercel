@@ -8,46 +8,46 @@ export const db = {
       eq: (column: string, value: any) => ({
         order: (orderColumn: string, options?: { ascending?: boolean }) => ({
           limit: (limitValue: number) => ({
-            single: () => supabase.from(table).select(columns).eq(column as any, value).order(orderColumn as any, options).single(),
-            maybeSingle: () => supabase.from(table).select(columns).eq(column as any, value).order(orderColumn as any, options).maybeSingle(),
-            execute: () => supabase.from(table).select(columns).eq(column as any, value).order(orderColumn as any, options).limit(limitValue)
+            single: () => (supabase as any).from(table).select(columns).eq(column, value).order(orderColumn, options).single(),
+            maybeSingle: () => (supabase as any).from(table).select(columns).eq(column, value).order(orderColumn, options).maybeSingle(),
+            execute: () => (supabase as any).from(table).select(columns).eq(column, value).order(orderColumn, options).limit(limitValue)
           }),
-          single: () => supabase.from(table).select(columns).eq(column as any, value).order(orderColumn as any, options).single(),
-          maybeSingle: () => supabase.from(table).select(columns).eq(column as any, value).order(orderColumn as any, options).maybeSingle(),
-          execute: () => supabase.from(table).select(columns).eq(column as any, value).order(orderColumn as any, options)
+          single: () => (supabase as any).from(table).select(columns).eq(column, value).order(orderColumn, options).single(),
+          maybeSingle: () => (supabase as any).from(table).select(columns).eq(column, value).order(orderColumn, options).maybeSingle(),
+          execute: () => (supabase as any).from(table).select(columns).eq(column, value).order(orderColumn, options)
         }),
         limit: (limitValue: number) => ({
-          execute: () => supabase.from(table).select(columns).eq(column as any, value).limit(limitValue)
+          execute: () => (supabase as any).from(table).select(columns).eq(column, value).limit(limitValue)
         }),
-        single: () => supabase.from(table).select(columns).eq(column as any, value).single(),
-        maybeSingle: () => supabase.from(table).select(columns).eq(column as any, value).maybeSingle(),
-        execute: () => supabase.from(table).select(columns).eq(column as any, value)
+        single: () => (supabase as any).from(table).select(columns).eq(column, value).single(),
+        maybeSingle: () => (supabase as any).from(table).select(columns).eq(column, value).maybeSingle(),
+        execute: () => (supabase as any).from(table).select(columns).eq(column, value)
       }),
       where: (column: string, value: any) => ({
         eq: (column2: string, value2: any) => ({
           order: (orderColumn: string, options?: { ascending?: boolean }) => ({
             limit: (limitValue: number) => ({
-              execute: () => supabase.from(table).select(columns).eq(column as any, value).eq(column2 as any, value2).order(orderColumn as any, options).limit(limitValue)
+              execute: () => (supabase as any).from(table).select(columns).eq(column, value).eq(column2 as any, value2).order(orderColumn, options).limit(limitValue)
             }),
-            single: () => supabase.from(table).select(columns).eq(column as any, value).eq(column2 as any, value2).order(orderColumn as any, options).single(),
-            maybeSingle: () => supabase.from(table).select(columns).eq(column as any, value).eq(column2 as any, value2).order(orderColumn as any, options).maybeSingle(),
-            execute: () => supabase.from(table).select(columns).eq(column as any, value).eq(column2 as any, value2).order(orderColumn as any, options)
+            single: () => (supabase as any).from(table).select(columns).eq(column, value).eq(column2 as any, value2).order(orderColumn, options).single(),
+            maybeSingle: () => (supabase as any).from(table).select(columns).eq(column, value).eq(column2 as any, value2).order(orderColumn, options).maybeSingle(),
+            execute: () => (supabase as any).from(table).select(columns).eq(column, value).eq(column2 as any, value2).order(orderColumn, options)
           }),
-          single: () => supabase.from(table).select(columns).eq(column as any, value).eq(column2 as any, value2).single(),
-          maybeSingle: () => supabase.from(table).select(columns).eq(column as any, value).eq(column2 as any, value2).maybeSingle(),
-          execute: () => supabase.from(table).select(columns).eq(column as any, value).eq(column2 as any, value2)
+          single: () => (supabase as any).from(table).select(columns).eq(column, value).eq(column2 as any, value2).single(),
+          maybeSingle: () => (supabase as any).from(table).select(columns).eq(column, value).eq(column2 as any, value2).maybeSingle(),
+          execute: () => (supabase as any).from(table).select(columns).eq(column, value).eq(column2 as any, value2)
         })
       }),
       order: (orderColumn: string, options?: { ascending?: boolean }) => ({
         limit: (limitValue: number) => ({
-          execute: () => supabase.from(table).select(columns).order(orderColumn as any, options).limit(limitValue)
+          execute: () => (supabase as any).from(table).select(columns).order(orderColumn, options).limit(limitValue)
         }),
-        execute: () => supabase.from(table).select(columns).order(orderColumn as any, options)
+        execute: () => (supabase as any).from(table).select(columns).order(orderColumn, options)
       }),
       limit: (limitValue: number) => ({
-        execute: () => supabase.from(table).select(columns).limit(limitValue)
+        execute: () => (supabase as any).from(table).select(columns).limit(limitValue)
       }),
-      execute: () => supabase.from(table).select(columns)
+      execute: () => (supabase as any).from(table).select(columns)
     })
   }),
 
@@ -55,9 +55,9 @@ export const db = {
   insert: (table: string) => ({
     values: (data: any) => ({
       select: (columns: string = "*") => ({
-        single: () => supabase.from(table).insert(data).select(columns).single()
+        single: () => (supabase as any).from(table).insert(data).select(columns).single()
       }),
-      execute: () => supabase.from(table).insert(data)
+      execute: () => (supabase as any).from(table).insert(data)
     })
   }),
 
@@ -67,11 +67,11 @@ export const db = {
       where: (column: string, value: any) => ({
         eq: (column2: string, value2: any) => ({
           select: (columns: string = "*") => ({
-            single: () => supabase.from(table).update(data).eq(column as any, value).eq(column2 as any, value2).select(columns).single()
+            single: () => (supabase as any).from(table).update(data).eq(column, value).eq(column2 as any, value2).select(columns).single()
           }),
-          execute: () => supabase.from(table).update(data).eq(column as any, value).eq(column2 as any, value2)
+          execute: () => (supabase as any).from(table).update(data).eq(column, value).eq(column2 as any, value2)
         }),
-        execute: () => supabase.from(table).update(data).eq(column as any, value)
+        execute: () => (supabase as any).from(table).update(data).eq(column, value)
       })
     })
   })

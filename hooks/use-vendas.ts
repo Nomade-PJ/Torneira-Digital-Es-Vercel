@@ -35,7 +35,7 @@ type NovoItemVenda = Database["public"]["Tables"]["itens_venda"]["Insert"]
 interface CarrinhoItem {
   produto_id: string
   nome: string
-  marca?: string
+  marca?: string | null
   categoria: string
   preco_venda: number
   estoque_atual: number
@@ -118,21 +118,21 @@ export function useVendas() {
 
       if (vendaAberta) {
         // Se já existe venda aberta, usar ela
-        setVendaAtual(vendaAberta)
+        setVendaAtual(vendaAberta as Venda)
         toast({
           title: "Venda retomada",
           description: `Continuando venda: ${vendaAberta.numero_venda}`,
         })
-        return vendaAberta
+        return vendaAberta as Venda
       }
 
       // Criar nova venda
       const novaVenda: Omit<NovaVenda, "id" | "created_at" | "updated_at" | "numero_venda"> = {
         usuario_id: user.id,
         cliente_id: cliente_id || null,
-        subtotal: 0,
+        total_produtos: 0,
         desconto: 0,
-        total: 0,
+        valor_final: 0,
         forma_pagamento: "dinheiro",
         status: "aberta",
       }
@@ -394,7 +394,7 @@ export function useVendas() {
     vendasCanceladas: vendas.filter(v => v.status === "cancelada").length,
     receitaTotal: vendas
       .filter(v => v.status === "finalizada")
-      .reduce((total, venda) => total + venda.total, 0),
+      .reduce((total, venda) => total + venda.valor_final, 0),
     vendasHoje: vendas.filter(v => {
       const hoje = new Date().toDateString()
       const dataVenda = new Date(v.data_venda).toDateString()
@@ -406,7 +406,7 @@ export function useVendas() {
         const dataVenda = new Date(v.data_venda).toDateString()
         return dataVenda === hoje && v.status === "finalizada"
       })
-      .reduce((total, venda) => total + venda.total, 0),
+      .reduce((total, venda) => total + venda.valor_final, 0),
   }
 
   useEffect(() => {
