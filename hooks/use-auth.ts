@@ -28,13 +28,18 @@ export function useAuth() {
     }
 
     // Verificar se já há uma sessão no localStorage para acelerar o processo
-    const localSession = localStorage.getItem('sb-' + supabase.supabaseUrl.split('//')[1] + '-auth-token')
-    if (!localSession) {
-      // Se não há sessão local, não precisa esperar
-      setLoading(false)
-      setUser(null)
-      setSession(null)
-    } else {
+    try {
+      const keys = Object.keys(localStorage).filter(key => key.includes('supabase.auth.token'))
+      if (keys.length === 0) {
+        // Se não há sessão local, não precisa esperar
+        setLoading(false)
+        setUser(null)
+        setSession(null)
+      } else {
+        getInitialSession()
+      }
+    } catch (error) {
+      // Fallback se localStorage não estiver disponível (SSR)
       getInitialSession()
     }
 
