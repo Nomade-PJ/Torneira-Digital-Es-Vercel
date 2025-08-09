@@ -45,6 +45,8 @@ import { useVendas } from "@/hooks/use-vendas"
 import { useClientes } from "@/hooks/use-clientes"
 import { useProdutos } from "@/hooks/use-produtos"
 import { LoadingSpinner } from "@/components/loading-spinner"
+import { BarcodeScanner } from "@/components/barcode-scanner"
+import { useToast } from "@/hooks/use-toast"
 
 export default function VendasPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -73,7 +75,8 @@ export default function VendasPage() {
   } = useVendas()
 
   const { clientes, buscarClientes } = useClientes()
-  const { produtos, loading: loadingProdutos } = useProdutos()
+  const { produtos, loading: loadingProdutos, buscarPorCodigoBarras } = useProdutos()
+  const { toast } = useToast()
 
   // Filtrar produtos para pesquisa
   const produtosFiltrados = produtos.filter(produto =>
@@ -81,6 +84,41 @@ export default function VendasPage() {
     produto.marca?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     produto.categoria.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  // Função para lidar com código de barras escaneado
+  const handleBarcodeScanned = async (barcode: string) => {
+    try {
+      const produto = await buscarPorCodigoBarras(barcode)
+      
+      if (produto) {
+        // Verificar se há venda ativa
+        if (!vendaAtual) {
+          await iniciarNovaVenda()
+        }
+        
+        // Adicionar produto ao carrinho
+        await adicionarItemCarrinho(produto.id)
+        
+        toast({
+          title: "Produto adicionado!",
+          description: `${produto.nome} foi adicionado ao carrinho`,
+        })
+      } else {
+        toast({
+          title: "Produto não encontrado",
+          description: `Nenhum produto encontrado com o código de barras: ${barcode}`,
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Erro ao processar código de barras:", error)
+      toast({
+        title: "Erro",
+        description: "Erro ao processar código de barras",
+        variant: "destructive",
+      })
+    }
+  }
 
   // Iniciar nova venda
   const iniciarNovaVenda = async () => {
@@ -241,6 +279,21 @@ export default function VendasPage() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 bg-slate-800/50 border-slate-700"
+                  />
+                </div>
+
+                {/* Scanner de Código de Barras */}
+                <div className="border border-slate-700 rounded-lg p-3 bg-slate-800/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-slate-300">Código de Barras</span>
+                    <Badge variant="outline" className="text-xs">
+                      Leitor Automático
+                    </Badge>
+                  </div>
+                  <BarcodeScanner
+                    onScan={handleBarcodeScanned}
+                    placeholder="Escaneie ou digite o código de barras"
+                    className="w-full"
                   />
                 </div>
 

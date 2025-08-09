@@ -168,6 +168,31 @@ export function useProdutos() {
     }
   }
 
+  // Função para buscar produto por código de barras
+  const buscarPorCodigoBarras = async (codigoBarras: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("produtos")
+        .select("*")
+        .eq("usuario_id", user.id)
+        .eq("codigo_barras", codigoBarras)
+        .eq("ativo", true)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // Produto não encontrado
+          return null
+        }
+        throw error
+      }
+      return data as unknown as Produto
+    } catch (error: any) {
+      console.error("Erro ao buscar produto por código de barras:", error)
+      return null
+    }
+  }
+
   // Estatísticas dos produtos
   const estatisticas = {
     total: produtos.length,
@@ -194,6 +219,7 @@ export function useProdutos() {
     atualizarProduto,
     deletarProduto,
     buscarProduto,
+    buscarPorCodigoBarras,
     refetch: fetchProdutos,
   }
 }
