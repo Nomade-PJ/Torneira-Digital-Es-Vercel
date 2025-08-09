@@ -56,7 +56,6 @@ export function useConfiguracoes() {
     const now = Date.now()
     
     if (!forceReload && cached && now < cached.expiryTime) {
-      console.log("📦 Configurações carregadas do cache")
       setConfiguracoes(cached.data)
       return
     }
@@ -105,9 +104,7 @@ export function useConfiguracoes() {
             .update(updateData)
             .eq("usuario_id", user.id)
           
-          if (!updateError) {
-            console.log("✅ Configurações auto-preenchidas com dados do usuário")
-          }
+          // Silencioso
         }
 
         // Salvar no cache (válido por 5 minutos)

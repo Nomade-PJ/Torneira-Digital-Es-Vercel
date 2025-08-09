@@ -5,6 +5,7 @@ import type { User, Session } from "@supabase/supabase-js"
 import { supabase } from "@/lib/supabase"
 import { authService } from "@/lib/auth"
 import { dbHelpers } from "@/lib/supabase-helpers"
+import { sessionManager } from "@/lib/session-cache"
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
@@ -27,105 +28,37 @@ export function useAuth() {
       }
     }
 
-    // Verificar sessão inicial de forma mais robusta
+    // Verificar sessão inicial com cache ultra-rápido
     const initializeAuth = async () => {
-      // Definir chave do localStorage fora do try-catch
-      const supabaseKey = `sb-${process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]?.split('.')[0] || 'default'}-auth-token`
-      const isProduction = process.env.NODE_ENV === 'production'
-      
       try {
-        setLoading(true)
-        
-        // Em produção, sempre tentar obter sessão diretamente do Supabase
-        if (isProduction) {
-          console.log("🏭 Ambiente de produção - obtendo sessão diretamente")
-          
-          // Tentar até 5 vezes com delays progressivos otimizados
-          let attempts = 0
-          const maxAttempts = 5
-          const delays = [0, 100, 250, 500, 1000] // Delays em milissegundos: imediato, 100ms, 250ms, 500ms, 1s
-          
-          while (attempts < maxAttempts) {
-            attempts++
-            console.log(`🔄 Tentativa ${attempts}/${maxAttempts}`)
-            
-            const { data: { session }, error } = await supabase.auth.getSession()
-            
-            if (!error && session?.user) {
-              console.log("✅ Sessão obtida em produção:", session.user.email)
-              setSession(session)
-              setUser(session.user)
-              setLoading(false)
-              return
-            }
-            
-            if (error) {
-              console.warn(`❌ Erro na tentativa ${attempts}:`, error)
-            } else {
-              console.log(`⚠️ Nenhuma sessão na tentativa ${attempts}`)
-            }
-            
-            // Se não é a última tentativa, aguardar com delay progressivo
-            if (attempts < maxAttempts) {
-              const delay = delays[attempts - 1] || 1000
-              console.log(`⏱️ Aguardando ${delay}ms antes da próxima tentativa`)
-              await new Promise(resolve => setTimeout(resolve, delay))
-            }
-          }
-          
-          console.log("❌ Todas as tentativas falharam")
-          setSession(null)
-          setUser(null)
+        // 1. Verificar cache primeiro (instantâneo)
+        const cached = sessionManager.getSession()
+        if (cached) {
+          setSession(cached.session)
+          setUser(cached.user)
           setLoading(false)
-          return
-        }
-        
-        // Em desenvolvimento, verificar localStorage primeiro
-        const storedSession = localStorage.getItem(supabaseKey) || localStorage.getItem('supabase.auth.token')
-        
-        if (!storedSession) {
-          console.log("🔍 Nenhuma sessão armazenada encontrada")
-          setLoading(false)
-          setUser(null)
-          setSession(null)
           return
         }
 
-        // Se há sessão armazenada, tentar recuperar do Supabase
-        console.log("🔍 Sessão armazenada encontrada, recuperando...")
-        const { data: { session }, error } = await supabase.auth.getSession()
+        // 2. Se não há cache, buscar do Supabase
+        const { data: { session } } = await supabase.auth.getSession()
         
-        if (error) {
-          console.warn("❌ Erro ao obter sessão:", error)
-          // Limpar sessão corrompida
-          localStorage.removeItem(supabaseKey)
-          localStorage.removeItem('supabase.auth.token')
-          setLoading(false)
-          setUser(null)
-          setSession(null)
-          return
-        }
-
         if (session?.user) {
-          console.log("✅ Sessão recuperada com sucesso:", session.user.email)
+          // Salvar no cache para próximas vezes
+          sessionManager.setSession(session.user, session)
           setSession(session)
           setUser(session.user)
         } else {
-          console.log("⚠️ Sessão expirada ou inválida")
-          localStorage.removeItem(supabaseKey)
-          localStorage.removeItem('supabase.auth.token')
+          sessionManager.clearSession()
           setSession(null)
           setUser(null)
         }
-        
-        setLoading(false)
       } catch (error) {
-        console.warn("❌ Erro ao inicializar auth:", error)
-        localStorage.removeItem(supabaseKey)
-        localStorage.removeItem('supabase.auth.token')
-        setLoading(false)
-        setUser(null)
+        sessionManager.clearSession()
         setSession(null)
+        setUser(null)
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -143,8 +76,7 @@ export function useAuth() {
 
           // Se não existir, criar o usuário com mais dados
           if (!usuario) {
-            console.log("🔄 Criando perfil automático no login...")
-            const { error: insertError } = await dbHelpers.usuarios.insert({
+            await dbHelpers.usuarios.insert({
               id: session.user.id,
               nome: session.user.user_metadata?.nome_estabelecimento || session.user.user_metadata?.nome || 'Usuário',
               email: session.user.email || '',
@@ -152,12 +84,6 @@ export function useAuth() {
               cnpj_cpf: session.user.user_metadata?.cnpj_cpf || '',
               telefone: session.user.user_metadata?.telefone || null
             })
-            
-            if (insertError) {
-              console.warn("⚠️ Erro ao criar perfil automático:", insertError)
-            } else {
-              console.log("✅ Perfil criado automaticamente no login")
-            }
           }
         } catch (error) {
           // Silencioso - não interromper fluxo
@@ -166,19 +92,21 @@ export function useAuth() {
       
       // Se um usuário se registrou mas não confirmou email, tentar confirmar automaticamente
       if (event === 'SIGNED_IN' && session?.user && !session.user.email_confirmed_at) {
-        console.log("🔄 Tentando confirmar email automaticamente...")
-        
         try {
           // Aguardar um pouco e tentar confirmar
           setTimeout(async () => {
-            const { data: currentSession } = await supabase.auth.getSession()
-            if (currentSession.session?.user && !currentSession.session.user.email_confirmed_at) {
-              console.log("⚠️ Email ainda não confirmado, mas permitindo acesso...")
-            }
+            await supabase.auth.getSession()
           }, 2000)
         } catch (error) {
-          console.warn("Erro ao verificar confirmação:", error)
+          // Silencioso
         }
+      }
+      
+      // Atualizar cache quando há mudanças
+      if (session?.user) {
+        sessionManager.setSession(session.user, session)
+      } else {
+        sessionManager.clearSession()
       }
       
       setSession(session)
