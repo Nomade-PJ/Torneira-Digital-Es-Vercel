@@ -44,13 +44,51 @@ import {
   TrendingDown,
 } from "lucide-react"
 
+import { BarcodeScanner } from "@/components/barcode-scanner"
+import { useToast } from "@/hooks/use-toast"
+
 export default function EstoquePage() {
-  const { produtos, loading, error, criarProduto, atualizarProduto, deletarProduto } = useProdutos()
+  const { produtos, loading, error, criarProduto, atualizarProduto, deletarProduto, buscarPorCodigoBarras } = useProdutos()
+  const { toast } = useToast()
   const [searchTerm, setSearchTerm] = useState("")
   const [filterCategory, setFilterCategory] = useState("all")
   const [selectedProduct, setSelectedProduct] = useState<any>(null)
   const [editingProduct, setEditingProduct] = useState<any>(null)
   const [deletingProduct, setDeletingProduct] = useState<any>(null)
+
+  // Função para lidar com código de barras escaneado
+  const handleBarcodeScanned = async (barcode: string) => {
+    try {
+      const produto = await buscarPorCodigoBarras(barcode)
+      
+      if (produto) {
+        // Atualizar o termo de busca para mostrar o produto encontrado
+        setSearchTerm(produto.nome)
+        
+        // Mostrar detalhes do produto
+        setSelectedProduct(produto)
+        setIsViewDialogOpen(true)
+        
+        toast({
+          title: "Produto encontrado!",
+          description: `${produto.nome} foi localizado no estoque`,
+        })
+      } else {
+        toast({
+          title: "Produto não encontrado",
+          description: `Nenhum produto encontrado com o código de barras: ${barcode}`,
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Erro ao processar código de barras:", error)
+      toast({
+        title: "Erro",
+        description: "Erro ao processar código de barras",
+        variant: "destructive",
+      })
+    }
+  }
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -236,6 +274,24 @@ export default function EstoquePage() {
                 className="pl-10 bg-slate-800/50 border-slate-700"
               />
             </div>
+
+            {/* Scanner de Código de Barras */}
+            <div className="w-full md:w-auto">
+              <div className="border border-slate-700 rounded-lg p-3 bg-slate-800/30">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-slate-300">Scanner</span>
+                  <Badge variant="outline" className="text-xs">
+                    Busca Rápida
+                  </Badge>
+                </div>
+                <BarcodeScanner
+                  onScan={handleBarcodeScanned}
+                  placeholder="Escaneie código de barras"
+                  className="w-full"
+                />
+              </div>
+            </div>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button

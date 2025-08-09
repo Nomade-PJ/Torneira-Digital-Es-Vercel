@@ -36,6 +36,8 @@ import {
 import { useMovimentacoes } from "@/hooks/use-movimentacoes"
 import { useProdutos } from "@/hooks/use-produtos"
 import { LoadingSpinner } from "@/components/loading-spinner"
+import { BarcodeScanner } from "@/components/barcode-scanner"
+import { useToast } from "@/hooks/use-toast"
 
 const motivosEntrada = [
   { value: "compra", label: "Compra", icon: ShoppingCart, color: "text-green-400" },
@@ -68,7 +70,44 @@ export default function FluxoPage() {
   })
 
   const { movimentacoes, loading, estatisticas, criarMovimentacao } = useMovimentacoes()
-  const { produtos } = useProdutos()
+  const { produtos, buscarPorCodigoBarras } = useProdutos()
+  const { toast } = useToast()
+
+  // Função para lidar com código de barras escaneado
+  const handleBarcodeScanned = async (barcode: string) => {
+    try {
+      const produto = await buscarPorCodigoBarras(barcode)
+      
+      if (produto) {
+        // Preencher automaticamente o produto no formulário
+        setFormData({
+          ...formData,
+          produtoId: produto.id,
+          preco: tipoMovimentacao === "entrada" 
+            ? produto.preco_compra.toString() 
+            : produto.preco_venda.toString()
+        })
+        
+        toast({
+          title: "Produto encontrado!",
+          description: `${produto.nome} foi selecionado automaticamente`,
+        })
+      } else {
+        toast({
+          title: "Produto não encontrado",
+          description: `Nenhum produto encontrado com o código de barras: ${barcode}`,
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Erro ao processar código de barras:", error)
+      toast({
+        title: "Erro",
+        description: "Erro ao processar código de barras",
+        variant: "destructive",
+      })
+    }
+  }
 
   const filteredMovimentacoes = movimentacoes.filter((mov) => {
     const nomeProduto = mov.produtos?.nome || ""
@@ -258,6 +297,23 @@ export default function FluxoPage() {
                       )}
                     </SelectContent>
                   </Select>
+                  
+                  {/* Scanner de Código de Barras */}
+                  <div className="mt-2">
+                    <div className="border border-slate-700 rounded-lg p-3 bg-slate-800/30">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-slate-300">Código de Barras</span>
+                        <Badge variant="outline" className="text-xs">
+                          Busca Rápida
+                        </Badge>
+                      </div>
+                      <BarcodeScanner
+                        onScan={handleBarcodeScanned}
+                        placeholder="Escaneie ou digite o código"
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="quantidade" className="text-sm font-medium">
