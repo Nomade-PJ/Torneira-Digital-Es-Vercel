@@ -12,15 +12,31 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Obter sessão inicial
+    // Obter sessão inicial de forma otimizada
     const getInitialSession = async () => {
-      const session = await authService.getCurrentSession()
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
+      try {
+        const session = await authService.getCurrentSession()
+        setSession(session)
+        setUser(session?.user ?? null)
+      } catch (error) {
+        console.warn("Erro ao obter sessão:", error)
+        setSession(null)
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
     }
 
-    getInitialSession()
+    // Verificar se já há uma sessão no localStorage para acelerar o processo
+    const localSession = localStorage.getItem('sb-' + supabase.supabaseUrl.split('//')[1] + '-auth-token')
+    if (!localSession) {
+      // Se não há sessão local, não precisa esperar
+      setLoading(false)
+      setUser(null)
+      setSession(null)
+    } else {
+      getInitialSession()
+    }
 
     // Escutar mudanças de autenticação
     const {
