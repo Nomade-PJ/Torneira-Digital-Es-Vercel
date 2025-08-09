@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useAuthContext } from "@/components/providers/auth-provider"
 import { SimpleProduto } from "@/lib/supabase-client"
 import { dbHelpers } from "@/lib/supabase-helpers"
+import { supabase } from "@/lib/supabase"
 
 // Cache local para produtos
 const produtosCache = new Map<string, {
@@ -170,6 +171,11 @@ export function useProdutos() {
 
   // Função para buscar produto por código de barras
   const buscarPorCodigoBarras = async (codigoBarras: string) => {
+    if (!user?.id) {
+      console.error("Usuário não autenticado")
+      return null
+    }
+
     try {
       const { data, error } = await supabase
         .from("produtos")
