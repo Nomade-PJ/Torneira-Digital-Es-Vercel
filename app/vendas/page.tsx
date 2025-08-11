@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -105,111 +105,213 @@ export default function VendasPage() {
   const { user } = useAuthContext()
   const { toast } = useToast()
 
-  // Funções diretas do Supabase
-  const carregarProdutos = async () => {
-    if (!user?.id) return
-    
+  // Cache em memória + SessionStorage para performance na Vercel
+  const dataCache = useRef({
+    produtos: null as Produto[] | null,
+    clientes: null as Cliente[] | null,
+    estatisticas: null as any,
+    vendaAtual: null as VendaAtual | null,
+    lastFetch: 0,
+    userId: null as string | null
+  })
+
+  // Cache duration (30 segundos)
+  const CACHE_DURATION = 30000
+
+  // Funções de persistência para sobreviver ao refresh
+  const saveToSessionStorage = (key: string, data: any) => {
     try {
-      const { data, error } = await supabase
-        .from("produtos")
-        .select("id, nome, marca, categoria, preco_venda, estoque_atual, codigo_barras")
-        .eq("usuario_id", user.id)
-        .eq("ativo", true)
-        .order("nome")
-      
-      if (error) throw error
-      setProdutos(data || [])
+      sessionStorage.setItem(`torneira_${key}`, JSON.stringify({
+        data,
+        timestamp: Date.now(),
+        userId: user?.id
+      }))
     } catch (error) {
-      console.error("Erro ao carregar produtos:", error)
+      console.warn("Erro ao salvar no sessionStorage:", error)
     }
   }
 
-  const carregarClientes = async () => {
-    if (!user?.id) return
-    
+  const getFromSessionStorage = (key: string) => {
     try {
-      const { data, error } = await supabase
-        .from("clientes")
-        .select("id, nome, cpf_cnpj, telefone")
-        .eq("usuario_id", user.id)
-        .order("nome")
-      
-      if (error) throw error
-      setClientes(data || [])
-    } catch (error) {
-      console.error("Erro ao carregar clientes:", error)
-    }
-  }
+      const stored = sessionStorage.getItem(`torneira_${key}`)
+      if (!stored) return null
 
-  const carregarEstatisticas = async () => {
-    if (!user?.id) return
-    
-    try {
-      const hoje = new Date().toISOString().split('T')[0]
+      const parsed = JSON.parse(stored)
       
-      // Vendas de hoje
-      const { data: vendasHoje, error: errorHoje } = await supabase
-        .from("vendas")
-        .select("total")
-        .eq("usuario_id", user.id)
-        .eq("status", "finalizada")
-        .gte("data_venda", hoje + "T00:00:00.000Z")
-        .lte("data_venda", hoje + "T23:59:59.999Z")
-      
-      // Total de vendas
-      const { data: vendasTotal, error: errorTotal } = await supabase
-        .from("vendas")
-        .select("total")
-        .eq("usuario_id", user.id)
-        .eq("status", "finalizada")
-      
-      if (errorHoje || errorTotal) throw errorHoje || errorTotal
-      
-      const receitaHoje = vendasHoje?.reduce((sum, v) => sum + Number(v.total), 0) || 0
-      const receitaTotal = vendasTotal?.reduce((sum, v) => sum + Number(v.total), 0) || 0
-      
-      setEstatisticas({
-        vendasHoje: vendasHoje?.length || 0,
-        receitaHoje,
-        totalVendas: vendasTotal?.length || 0,
-        receitaTotal,
-      })
-    } catch (error) {
-      console.error("Erro ao carregar estatísticas:", error)
-    }
-  }
-
-  const verificarVendaAberta = async () => {
-    if (!user?.id) return
-    
-    try {
-      const { data, error } = await supabase
-        .from("vendas")
-        .select("id, numero_venda, status")
-        .eq("usuario_id", user.id)
-        .eq("status", "aberta")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle()
-      
-      if (error) throw error
-      if (data) {
-        setVendaAtual(data)
+      // Verificar se é do mesmo usuário e não expirou
+      if (
+        parsed.userId === user?.id &&
+        (Date.now() - parsed.timestamp) < CACHE_DURATION
+      ) {
+        return parsed.data
       }
     } catch (error) {
-      console.error("Erro ao verificar venda aberta:", error)
+      console.warn("Erro ao ler do sessionStorage:", error)
     }
+    return null
   }
 
-  // Carregar dados iniciais
-  useEffect(() => {
-    if (user?.id) {
-      carregarProdutos()
-      carregarClientes()
-      carregarEstatisticas()
-      verificarVendaAberta()
+  // Função para carregar TODOS os dados em paralelo (ultra rápido)
+  const carregarTodosDados = useCallback(async () => {
+    if (!user?.id) return
+
+    // Verificar cache válido
+    const now = Date.now()
+    const cacheValid = 
+      dataCache.current.userId === user.id &&
+      (now - dataCache.current.lastFetch) < CACHE_DURATION &&
+      dataCache.current.produtos &&
+      dataCache.current.clientes
+
+    if (cacheValid) {
+      // Usar dados do cache instantaneamente
+      setProdutos(dataCache.current.produtos!)
+      setClientes(dataCache.current.clientes!)
+      setEstatisticas(dataCache.current.estatisticas || {
+        vendasHoje: 0, receitaHoje: 0, totalVendas: 0, receitaTotal: 0
+      })
+      if (dataCache.current.vendaAtual) {
+        setVendaAtual(dataCache.current.vendaAtual)
+      }
+      return
+    }
+
+    // Tentar carregar do sessionStorage primeiro (sobrevive ao refresh)
+    const cachedProdutos = getFromSessionStorage('produtos')
+    const cachedClientes = getFromSessionStorage('clientes')
+    const cachedEstatisticas = getFromSessionStorage('estatisticas')
+    const cachedVendaAtual = getFromSessionStorage('vendaAtual')
+
+    if (cachedProdutos && cachedClientes) {
+      setProdutos(cachedProdutos)
+      setClientes(cachedClientes)
+      if (cachedEstatisticas) setEstatisticas(cachedEstatisticas)
+      if (cachedVendaAtual) setVendaAtual(cachedVendaAtual)
+      
+      // Atualizar cache em memória
+      dataCache.current = {
+        produtos: cachedProdutos,
+        clientes: cachedClientes,
+        estatisticas: cachedEstatisticas,
+        vendaAtual: cachedVendaAtual,
+        lastFetch: Date.now(),
+        userId: user.id
+      }
+      
+      // Carregar dados frescos em background
+      setTimeout(() => carregarTodosDados(), 100)
+      return
+    }
+
+    try {
+      const hoje = new Date().toISOString().split('T')[0]
+
+      // TODAS as chamadas em paralelo para máxima velocidade
+      const [
+        produtosRes,
+        clientesRes, 
+        vendasHojeRes,
+        vendasTotalRes,
+        vendaAbertaRes
+      ] = await Promise.all([
+        supabase
+          .from("produtos")
+          .select("id, nome, marca, categoria, preco_venda, estoque_atual, codigo_barras")
+          .eq("usuario_id", user.id)
+          .eq("ativo", true)
+          .order("nome"),
+        
+        supabase
+          .from("clientes")
+          .select("id, nome, cpf_cnpj, telefone")
+          .eq("usuario_id", user.id)
+          .order("nome"),
+        
+        supabase
+          .from("vendas")
+          .select("total")
+          .eq("usuario_id", user.id)
+          .eq("status", "finalizada")
+          .gte("data_venda", hoje + "T00:00:00.000Z")
+          .lte("data_venda", hoje + "T23:59:59.999Z"),
+        
+        supabase
+          .from("vendas")
+          .select("total")
+          .eq("usuario_id", user.id)
+          .eq("status", "finalizada"),
+        
+        supabase
+          .from("vendas")
+          .select("id, numero_venda, status")
+          .eq("usuario_id", user.id)
+          .eq("status", "aberta")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      ])
+
+      // Processar resultados instantaneamente
+      const produtos = produtosRes.data || []
+      const clientes = clientesRes.data || []
+      const vendasHoje = vendasHojeRes.data || []
+      const vendasTotal = vendasTotalRes.data || []
+      const vendaAberta = vendaAbertaRes.data
+
+      const receitaHoje = vendasHoje.reduce((sum, v) => sum + Number(v.total), 0)
+      const receitaTotal = vendasTotal.reduce((sum, v) => sum + Number(v.total), 0)
+
+      const estatisticas = {
+        vendasHoje: vendasHoje.length,
+        receitaHoje,
+        totalVendas: vendasTotal.length,
+        receitaTotal,
+      }
+
+      // Atualizar estados instantaneamente
+      setProdutos(produtos)
+      setClientes(clientes)
+      setEstatisticas(estatisticas)
+      if (vendaAberta) {
+        setVendaAtual(vendaAberta)
+      }
+
+      // Salvar no cache em memória e sessionStorage
+      dataCache.current = {
+        produtos,
+        clientes,
+        estatisticas,
+        vendaAtual: vendaAberta,
+        lastFetch: now,
+        userId: user.id
+      }
+
+      // Persistir no sessionStorage para sobreviver ao refresh
+      saveToSessionStorage('produtos', produtos)
+      saveToSessionStorage('clientes', clientes)
+      saveToSessionStorage('estatisticas', estatisticas)
+      if (vendaAberta) saveToSessionStorage('vendaAtual', vendaAberta)
+
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error)
     }
   }, [user?.id])
+
+  // Carregar dados iniciais COM cache
+  useEffect(() => {
+    carregarTodosDados()
+  }, [carregarTodosDados])
+
+  // Recarregar dados a cada 30 segundos em background
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (user?.id) {
+        carregarTodosDados()
+      }
+    }, CACHE_DURATION)
+
+    return () => clearInterval(interval)
+  }, [carregarTodosDados, user?.id])
 
   // Filtrar produtos para pesquisa
   const produtosFiltrados = produtos.filter(produto =>
@@ -443,7 +545,7 @@ export default function VendasPage() {
       setClienteSelecionado(null)
       
       // 4. Atualizar estatísticas
-      carregarEstatisticas()
+      carregarTodosDados()
 
       toast({
         title: "Sucesso",
