@@ -76,7 +76,7 @@ export function AppSidebar() {
         const { data } = await supabase
           .from("configuracoes")
           .select("nome_estabelecimento")
-          .eq("user_id", user.id)
+          .eq("usuario_id", user.id)
           .single()
 
         if (data) {

@@ -361,14 +361,16 @@ export default function VendasPage() {
       }
 
       // Criar nova venda
+      const numeroVenda = `VND-${Date.now()}`
       const { data, error } = await supabase
         .from("vendas")
         .insert({
           usuario_id: user.id,
+          numero_venda: numeroVenda,
           cliente_id: clienteSelecionado?.id || null,
-          total_produtos: 0,
+          subtotal: 0,
           desconto: 0,
-          valor_final: 0,
+          total: 0,
           forma_pagamento: "dinheiro",
           status: "aberta",
         })
