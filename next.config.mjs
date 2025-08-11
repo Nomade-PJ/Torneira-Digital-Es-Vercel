@@ -14,12 +14,23 @@ const nextConfig = {
   devIndicators: {
     position: 'bottom-right',
   },
-  // Otimizações para performance
+  // Otimizações para performance ultra-agressiva
   compress: true,
   poweredByHeader: false,
-  // Configurações experimentais
+  swcMinify: true,
+  
+  // Configurações experimentais para máxima performance
   experimental: {
-    // Configurações futuras aqui
+    optimizeCss: true,
+    optimizePackageImports: ['@supabase/supabase-js', 'lucide-react'],
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
+    },
   },
   // Headers de segurança
   async headers() {
