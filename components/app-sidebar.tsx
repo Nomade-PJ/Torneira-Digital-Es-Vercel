@@ -26,41 +26,69 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useRouter } from "next/navigation"
 import { useAuthContext } from "@/components/providers/auth-provider"
-import { useConfiguracoes } from "@/hooks/use-configuracoes"
+import { supabase } from "@/lib/supabase"
+import { useState, useEffect } from "react"
 
 const menuItems = [
   {
     title: "PDV - Vendas",
-    url: "/dashboard/vendas",
+    url: "/vendas",
     icon: ShoppingCart,
   },
   {
     title: "Estoque",
-    url: "/dashboard/estoque", 
+    url: "/estoque", 
     icon: Package,
   },
   {
     title: "Fluxo de Produtos",
-    url: "/dashboard/fluxo",
+    url: "/fluxo",
     icon: Activity,
   },
   {
     title: "Relatórios",
-    url: "/dashboard/relatorios",
+    url: "/relatorios",
     icon: BarChart3,
   },
   {
     title: "Configurações",
-    url: "/dashboard/configuracoes",
+    url: "/configuracoes",
     icon: Settings,
   },
 ]
+
+interface Configuracao {
+  nome_estabelecimento?: string
+}
 
 export function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { signOut, user, loading } = useAuthContext()
-  const { configuracoes } = useConfiguracoes()
+  const [configuracoes, setConfiguracoes] = useState<Configuracao | null>(null)
+
+  // Carregar configurações diretamente
+  useEffect(() => {
+    const carregarConfiguracoes = async () => {
+      if (!user?.id) return
+
+      try {
+        const { data } = await supabase
+          .from("configuracoes")
+          .select("nome_estabelecimento")
+          .eq("user_id", user.id)
+          .single()
+
+        if (data) {
+          setConfiguracoes(data)
+        }
+      } catch (error) {
+        console.warn("Erro ao carregar configurações:", error)
+      }
+    }
+
+    carregarConfiguracoes()
+  }, [user?.id])
 
   const handleLogout = async () => {
     try {
@@ -76,7 +104,7 @@ export function AppSidebar() {
   }
 
   const handleSettings = () => {
-    router.push("/dashboard/configuracoes")
+    router.push("/configuracoes")
   }
 
   return (

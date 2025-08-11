@@ -48,7 +48,7 @@ export default function LoginPage() {
   // Redirecionar se usuário já estiver logado
   useEffect(() => {
     if (!authLoading && user) {
-      router.push("/dashboard")
+      router.push("/vendas")
     }
   }, [user, authLoading, router])
 
@@ -132,7 +132,7 @@ export default function LoginPage() {
         }
       }
       
-      router.push("/dashboard")
+      router.push("/vendas")
     } catch (error: any) {
       console.error("Erro de autenticação:", error)
       
@@ -172,7 +172,7 @@ export default function LoginPage() {
               email: formData.email,
               password: formData.password
             })
-            router.push("/dashboard")
+            router.push("/vendas")
           } catch (loginError) {
             console.error("❌ Erro no login automático:", loginError)
             setError("✅ Conta criada com sucesso! Faça login manualmente.")

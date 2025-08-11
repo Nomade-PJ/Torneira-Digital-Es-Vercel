@@ -41,42 +41,175 @@ import {
   Receipt,
   X,
 } from "lucide-react"
-import { useVendas } from "@/hooks/use-vendas"
-import { useClientes } from "@/hooks/use-clientes"
-import { useProdutos } from "@/hooks/use-produtos"
-import { LoadingSpinner } from "@/components/loading-spinner"
+import { supabase } from "@/lib/supabase"
+import { useAuthContext } from "@/components/providers/auth-provider"
 import { BarcodeScanner } from "@/components/barcode-scanner"
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/components/ui/use-toast"
+
+interface CarrinhoItem {
+  produto_id: string
+  nome: string
+  marca?: string | null
+  categoria: string
+  preco_venda: number
+  estoque_atual: number
+  quantidade: number
+  desconto_item: number
+}
+
+interface Produto {
+  id: string
+  nome: string
+  marca?: string | null
+  categoria: string
+  preco_venda: number
+  estoque_atual: number
+  codigo_barras?: string
+}
+
+interface Cliente {
+  id: string
+  nome: string
+  cpf_cnpj?: string
+  telefone?: string
+}
+
+interface VendaAtual {
+  id: string
+  numero_venda: string
+  status: string
+}
 
 export default function VendasPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [isClienteDialogOpen, setIsClienteDialogOpen] = useState(false)
   const [isFinalizarDialogOpen, setIsFinalizarDialogOpen] = useState(false)
   const [isCancelarDialogOpen, setIsCancelarDialogOpen] = useState(false)
-  const [clienteSelecionado, setClienteSelecionado] = useState<any>(null)
+  const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(null)
   const [formaPagamento, setFormaPagamento] = useState("dinheiro")
   const [descontoTotal, setDescontoTotal] = useState(0)
   const [observacoes, setObservacoes] = useState("")
 
-  const {
-    vendaAtual,
-    carrinho,
-    loading: loadingVendas,
-    estatisticas,
-    totaisCarrinho,
-    criarVenda,
-    adicionarItemCarrinho,
-    removerItemCarrinho,
-    atualizarQuantidadeCarrinho,
-    aplicarDescontoItem,
-    limparCarrinho,
-    finalizarVenda,
-    cancelarVenda,
-  } = useVendas()
+  // Estados para dados diretos
+  const [produtos, setProdutos] = useState<Produto[]>([])
+  const [clientes, setClientes] = useState<Cliente[]>([])
+  const [vendaAtual, setVendaAtual] = useState<VendaAtual | null>(null)
+  const [carrinho, setCarrinho] = useState<CarrinhoItem[]>([])
+  const [estatisticas, setEstatisticas] = useState({
+    vendasHoje: 0,
+    receitaHoje: 0,
+    totalVendas: 0,
+    receitaTotal: 0,
+  })
 
-  const { clientes, buscarClientes } = useClientes()
-  const { produtos, loading: loadingProdutos, buscarPorCodigoBarras } = useProdutos()
+  const { user } = useAuthContext()
   const { toast } = useToast()
+
+  // Funções diretas do Supabase
+  const carregarProdutos = async () => {
+    if (!user?.id) return
+    
+    try {
+      const { data, error } = await supabase
+        .from("produtos")
+        .select("id, nome, marca, categoria, preco_venda, estoque_atual, codigo_barras")
+        .eq("usuario_id", user.id)
+        .eq("ativo", true)
+        .order("nome")
+      
+      if (error) throw error
+      setProdutos(data || [])
+    } catch (error) {
+      console.error("Erro ao carregar produtos:", error)
+    }
+  }
+
+  const carregarClientes = async () => {
+    if (!user?.id) return
+    
+    try {
+      const { data, error } = await supabase
+        .from("clientes")
+        .select("id, nome, cpf_cnpj, telefone")
+        .eq("usuario_id", user.id)
+        .order("nome")
+      
+      if (error) throw error
+      setClientes(data || [])
+    } catch (error) {
+      console.error("Erro ao carregar clientes:", error)
+    }
+  }
+
+  const carregarEstatisticas = async () => {
+    if (!user?.id) return
+    
+    try {
+      const hoje = new Date().toISOString().split('T')[0]
+      
+      // Vendas de hoje
+      const { data: vendasHoje, error: errorHoje } = await supabase
+        .from("vendas")
+        .select("total")
+        .eq("usuario_id", user.id)
+        .eq("status", "finalizada")
+        .gte("data_venda", hoje + "T00:00:00.000Z")
+        .lte("data_venda", hoje + "T23:59:59.999Z")
+      
+      // Total de vendas
+      const { data: vendasTotal, error: errorTotal } = await supabase
+        .from("vendas")
+        .select("total")
+        .eq("usuario_id", user.id)
+        .eq("status", "finalizada")
+      
+      if (errorHoje || errorTotal) throw errorHoje || errorTotal
+      
+      const receitaHoje = vendasHoje?.reduce((sum, v) => sum + Number(v.total), 0) || 0
+      const receitaTotal = vendasTotal?.reduce((sum, v) => sum + Number(v.total), 0) || 0
+      
+      setEstatisticas({
+        vendasHoje: vendasHoje?.length || 0,
+        receitaHoje,
+        totalVendas: vendasTotal?.length || 0,
+        receitaTotal,
+      })
+    } catch (error) {
+      console.error("Erro ao carregar estatísticas:", error)
+    }
+  }
+
+  const verificarVendaAberta = async () => {
+    if (!user?.id) return
+    
+    try {
+      const { data, error } = await supabase
+        .from("vendas")
+        .select("id, numero_venda, status")
+        .eq("usuario_id", user.id)
+        .eq("status", "aberta")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      
+      if (error) throw error
+      if (data) {
+        setVendaAtual(data)
+      }
+    } catch (error) {
+      console.error("Erro ao verificar venda aberta:", error)
+    }
+  }
+
+  // Carregar dados iniciais
+  useEffect(() => {
+    if (user?.id) {
+      carregarProdutos()
+      carregarClientes()
+      carregarEstatisticas()
+      verificarVendaAberta()
+    }
+  }, [user?.id])
 
   // Filtrar produtos para pesquisa
   const produtosFiltrados = produtos.filter(produto =>
@@ -84,6 +217,31 @@ export default function VendasPage() {
     produto.marca?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     produto.categoria.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  // Função para buscar produto por código de barras
+  const buscarPorCodigoBarras = async (codigoBarras: string) => {
+    if (!user?.id) return null
+
+    try {
+      const { data, error } = await supabase
+        .from("produtos")
+        .select("*")
+        .eq("usuario_id", user.id)
+        .eq("codigo_barras", codigoBarras)
+        .eq("ativo", true)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') return null
+        throw error
+      }
+      
+      return data
+    } catch (error) {
+      console.error("Erro ao buscar produto por código de barras:", error)
+      return null
+    }
+  }
 
   // Função para lidar com código de barras escaneado
   const handleBarcodeScanned = async (barcode: string) => {
@@ -97,7 +255,7 @@ export default function VendasPage() {
         }
         
         // Adicionar produto ao carrinho
-        await adicionarItemCarrinho(produto)
+        adicionarItemCarrinho(produto)
         
         toast({
           title: "Produto adicionado!",
@@ -120,45 +278,214 @@ export default function VendasPage() {
     }
   }
 
+  // Funções do carrinho
+  const adicionarItemCarrinho = (produto: Produto) => {
+    setCarrinho(prev => {
+      const itemExistente = prev.find(item => item.produto_id === produto.id)
+      
+      if (itemExistente) {
+        return prev.map(item => 
+          item.produto_id === produto.id 
+            ? { 
+                ...item, 
+                quantidade: Math.min(item.quantidade + 1, produto.estoque_atual)
+              }
+            : item
+        )
+      } else {
+        return [...prev, {
+          produto_id: produto.id,
+          nome: produto.nome,
+          marca: produto.marca,
+          categoria: produto.categoria,
+          preco_venda: produto.preco_venda,
+          estoque_atual: produto.estoque_atual,
+          quantidade: 1,
+          desconto_item: 0,
+        }]
+      }
+    })
+  }
+
+  const removerItemCarrinho = (produto_id: string) => {
+    setCarrinho(prev => prev.filter(item => item.produto_id !== produto_id))
+  }
+
+  const atualizarQuantidadeCarrinho = (produto_id: string, quantidade: number) => {
+    setCarrinho(prev => 
+      prev.map(item => 
+        item.produto_id === produto_id 
+          ? { ...item, quantidade: Math.max(0, Math.min(quantidade, item.estoque_atual)) }
+          : item
+      ).filter(item => item.quantidade > 0)
+    )
+  }
+
+  // Calcular totais do carrinho
+  const totaisCarrinho = {
+    subtotal: carrinho.reduce((total, item) => 
+      total + (item.quantidade * item.preco_venda), 0
+    ),
+    desconto: carrinho.reduce((total, item) => 
+      total + item.desconto_item, 0
+    ),
+    total: carrinho.reduce((total, item) => 
+      total + (item.quantidade * item.preco_venda) - item.desconto_item, 0
+    ),
+    itens: carrinho.length,
+    quantidadeTotal: carrinho.reduce((total, item) => total + item.quantidade, 0),
+  }
+
   // Iniciar nova venda
   const iniciarNovaVenda = async () => {
+    if (!user?.id) return
+
     try {
-      await criarVenda(clienteSelecionado?.id)
+      // Verificar se já existe venda aberta
+      const { data: vendaAberta } = await supabase
+        .from("vendas")
+        .select("id, numero_venda")
+        .eq("usuario_id", user.id)
+        .eq("status", "aberta")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (vendaAberta) {
+        setVendaAtual(vendaAberta as VendaAtual)
+        toast({
+          title: "Venda retomada",
+          description: `Continuando venda: ${vendaAberta.numero_venda}`,
+        })
+        return
+      }
+
+      // Criar nova venda
+      const { data, error } = await supabase
+        .from("vendas")
+        .insert({
+          usuario_id: user.id,
+          cliente_id: clienteSelecionado?.id || null,
+          total_produtos: 0,
+          desconto: 0,
+          valor_final: 0,
+          forma_pagamento: "dinheiro",
+          status: "aberta",
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+      
+      setVendaAtual(data)
+      setCarrinho([])
+      
+      toast({
+        title: "Sucesso",
+        description: `Nova venda criada: ${data.numero_venda}`,
+      })
     } catch (error) {
       console.error("Erro ao iniciar venda:", error)
+      toast({
+        title: "Erro",
+        description: "Erro ao criar nova venda",
+        variant: "destructive",
+      })
     }
   }
 
   // Finalizar venda atual
   const handleFinalizarVenda = async () => {
-    if (!vendaAtual) return
+    if (!vendaAtual || carrinho.length === 0 || !user?.id) return
 
     try {
-      await finalizarVenda(
-        vendaAtual.id,
-        formaPagamento,
-        descontoTotal,
-        observacoes
-      )
+      // 1. Adicionar itens à venda
+      const itensVenda = carrinho.map(item => ({
+        venda_id: vendaAtual.id,
+        produto_id: item.produto_id,
+        quantidade: item.quantidade,
+        preco_unitario: item.preco_venda,
+        desconto_item: item.desconto_item,
+        subtotal: (item.quantidade * item.preco_venda) - item.desconto_item,
+      }))
+
+      const { error: itensError } = await supabase
+        .from("itens_venda")
+        .insert(itensVenda)
+
+      if (itensError) throw itensError
+
+      // 2. Atualizar venda com totais
+      const valorFinal = totaisCarrinho.total - descontoTotal
+      const { error: vendaError } = await supabase
+        .from("vendas")
+        .update({
+          subtotal: totaisCarrinho.subtotal,
+          desconto: descontoTotal,
+          total: valorFinal,
+          forma_pagamento: formaPagamento,
+          observacoes,
+          status: "finalizada",
+        })
+        .eq("id", vendaAtual.id)
+        .eq("usuario_id", user.id)
+
+      if (vendaError) throw vendaError
+
+      // 3. Limpar estado
+      setVendaAtual(null)
+      setCarrinho([])
       setIsFinalizarDialogOpen(false)
       setDescontoTotal(0)
       setObservacoes("")
       setClienteSelecionado(null)
+      
+      // 4. Atualizar estatísticas
+      carregarEstatisticas()
+
+      toast({
+        title: "Sucesso",
+        description: `Venda finalizada com sucesso!`,
+      })
     } catch (error) {
       console.error("Erro ao finalizar venda:", error)
+      toast({
+        title: "Erro",
+        description: "Erro ao finalizar venda",
+        variant: "destructive",
+      })
     }
   }
 
   // Cancelar venda atual
   const handleCancelarVenda = async () => {
-    if (!vendaAtual) return
+    if (!vendaAtual || !user?.id) return
 
     try {
-      await cancelarVenda(vendaAtual.id)
+      const { error } = await supabase
+        .from("vendas")
+        .update({ status: "cancelada" })
+        .eq("id", vendaAtual.id)
+        .eq("usuario_id", user.id)
+
+      if (error) throw error
+
+      setVendaAtual(null)
+      setCarrinho([])
       setIsCancelarDialogOpen(false)
       setClienteSelecionado(null)
+
+      toast({
+        title: "Sucesso",
+        description: "Venda cancelada com sucesso",
+      })
     } catch (error) {
       console.error("Erro ao cancelar venda:", error)
+      toast({
+        title: "Erro",
+        description: "Erro ao cancelar venda",
+        variant: "destructive",
+      })
     }
   }
 
@@ -299,10 +626,9 @@ export default function VendasPage() {
 
                 {/* Lista de Produtos */}
                 <div className="max-h-64 md:max-h-96 overflow-y-auto space-y-2">
-                  {/* Loading removido - carregamento instantâneo */}
                   {produtosFiltrados.length === 0 ? (
                     <div className="text-center text-slate-400 py-8">
-                      Nenhum produto encontrado
+                      {produtos.length === 0 ? "Carregando produtos..." : "Nenhum produto encontrado"}
                     </div>
                   ) : (
                     produtosFiltrados.map((produto) => (

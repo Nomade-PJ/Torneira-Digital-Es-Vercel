@@ -49,7 +49,7 @@ export const authService = {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${window.location.origin}/vendas`,
           data: {
             nome_estabelecimento: nomeEstabelecimento,
             cnpj_cpf: cnpjCpf,

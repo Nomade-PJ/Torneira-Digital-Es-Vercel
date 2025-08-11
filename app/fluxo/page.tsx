@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -33,11 +33,42 @@ import {
   ArrowDownCircle,
   X,
 } from "lucide-react"
-import { useMovimentacoes } from "@/hooks/use-movimentacoes"
-import { useProdutos } from "@/hooks/use-produtos"
-import { LoadingSpinner } from "@/components/loading-spinner"
+import { supabase } from "@/lib/supabase"
+import { useAuthContext } from "@/components/providers/auth-provider"
 import { BarcodeScanner } from "@/components/barcode-scanner"
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/components/ui/use-toast"
+
+interface Produto {
+  id: string
+  nome: string
+  marca?: string | null
+  categoria: string
+  preco_compra: number
+  preco_venda: number
+  estoque_atual: number
+  codigo_barras?: string
+}
+
+interface Movimentacao {
+  id: string
+  produto_id: string
+  tipo: "entrada" | "saida"
+  motivo: string
+  quantidade: number
+  preco_unitario: number
+  valor_total?: number
+  responsavel: string
+  fornecedor?: string | null
+  observacao?: string | null
+  status: "pendente" | "concluida" | "cancelada"
+  data_movimentacao: string
+  produtos?: {
+    nome: string
+    marca: string | null
+    categoria: string
+    ativo: boolean
+  }
+}
 
 const motivosEntrada = [
   { value: "compra", label: "Compra", icon: ShoppingCart, color: "text-green-400" },
@@ -69,9 +100,198 @@ export default function FluxoPage() {
     observacao: "",
   })
 
-  const { movimentacoes, loading, estatisticas, criarMovimentacao } = useMovimentacoes()
-  const { produtos, buscarPorCodigoBarras } = useProdutos()
+  // Estados para dados diretos
+  const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([])
+  const [produtos, setProdutos] = useState<Produto[]>([])
+  const [estatisticas, setEstatisticas] = useState({
+    totalMovimentacoes: 0,
+    totalEntradas: 0,
+    totalSaidas: 0,
+    valorTotalEntradas: 0,
+    valorTotalSaidas: 0,
+  })
+
+  const { user } = useAuthContext()
   const { toast } = useToast()
+
+  // Funções diretas do Supabase
+  const carregarMovimentacoes = async () => {
+    if (!user?.id) return
+    
+    try {
+      const { data, error } = await supabase
+        .from("movimentacoes")
+        .select(`
+          *,
+          produtos (
+            nome, marca, categoria, ativo
+          )
+        `)
+        .eq("usuario_id", user.id)
+        .order("data_movimentacao", { ascending: false })
+        .limit(50)
+      
+      if (error) throw error
+      setMovimentacoes(data || [])
+    } catch (error) {
+      console.error("Erro ao carregar movimentações:", error)
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar movimentações",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const carregarProdutos = async () => {
+    if (!user?.id) return
+    
+    try {
+      const { data, error } = await supabase
+        .from("produtos")
+        .select("id, nome, marca, categoria, preco_compra, preco_venda, estoque_atual, codigo_barras")
+        .eq("usuario_id", user.id)
+        .eq("ativo", true)
+        .order("nome")
+      
+      if (error) throw error
+      setProdutos(data || [])
+    } catch (error) {
+      console.error("Erro ao carregar produtos:", error)
+    }
+  }
+
+  const calcularEstatisticas = () => {
+    const totalMovimentacoes = movimentacoes.length
+    const totalEntradas = movimentacoes.filter(m => m.tipo === "entrada" && m.status === "concluida").length
+    const totalSaidas = movimentacoes.filter(m => m.tipo === "saida" && m.status === "concluida").length
+    const valorTotalEntradas = movimentacoes
+      .filter(m => m.tipo === "entrada" && m.status === "concluida")
+      .reduce((total, mov) => total + (mov.preco_unitario * mov.quantidade), 0)
+    const valorTotalSaidas = movimentacoes
+      .filter(m => m.tipo === "saida" && m.status === "concluida")
+      .reduce((total, mov) => total + (mov.preco_unitario * mov.quantidade), 0)
+
+    setEstatisticas({
+      totalMovimentacoes,
+      totalEntradas,
+      totalSaidas,
+      valorTotalEntradas,
+      valorTotalSaidas,
+    })
+  }
+
+  const buscarPorCodigoBarras = async (codigoBarras: string) => {
+    if (!user?.id) return null
+
+    try {
+      const { data, error } = await supabase
+        .from("produtos")
+        .select("*")
+        .eq("usuario_id", user.id)
+        .eq("codigo_barras", codigoBarras)
+        .eq("ativo", true)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') return null
+        throw error
+      }
+      
+      return data
+    } catch (error) {
+      console.error("Erro ao buscar produto por código de barras:", error)
+      return null
+    }
+  }
+
+  const criarMovimentacao = async (movimentacaoData: any) => {
+    if (!user?.id) return
+
+    try {
+      // 1. Criar movimentação
+      const { data: novaMovimentacao, error: errorMovimentacao } = await supabase
+        .from("movimentacoes")
+        .insert({
+          ...movimentacaoData,
+          usuario_id: user.id,
+          status: "concluida",
+          data_movimentacao: new Date().toISOString(),
+          valor_total: movimentacaoData.preco_unitario * movimentacaoData.quantidade,
+        })
+        .select(`
+          *,
+          produtos (
+            nome, marca, categoria, ativo
+          )
+        `)
+        .single()
+
+      if (errorMovimentacao) throw errorMovimentacao
+
+      // 2. Atualizar estoque do produto
+      const { data: produto, error: errorProduto } = await supabase
+        .from("produtos")
+        .select("estoque_atual")
+        .eq("id", movimentacaoData.produto_id)
+        .single()
+
+      if (errorProduto) throw errorProduto
+
+      const novoEstoque = movimentacaoData.tipo === "entrada" 
+        ? produto.estoque_atual + movimentacaoData.quantidade
+        : produto.estoque_atual - movimentacaoData.quantidade
+
+      if (movimentacaoData.tipo === "saida" && novoEstoque < 0) {
+        throw new Error("Estoque insuficiente para esta operação")
+      }
+
+      const { error: errorAtualizacao } = await supabase
+        .from("produtos")
+        .update({ estoque_atual: novoEstoque })
+        .eq("id", movimentacaoData.produto_id)
+
+      if (errorAtualizacao) throw errorAtualizacao
+
+      // 3. Atualizar listas locais
+      setMovimentacoes(prev => [novaMovimentacao, ...prev])
+      setProdutos(prev => 
+        prev.map(p => 
+          p.id === movimentacaoData.produto_id 
+            ? { ...p, estoque_atual: novoEstoque }
+            : p
+        )
+      )
+      
+      toast({
+        title: "Sucesso",
+        description: `Movimentação de ${movimentacaoData.tipo} registrada com sucesso`,
+      })
+
+      return novaMovimentacao
+    } catch (error: any) {
+      console.error("Erro ao criar movimentação:", error)
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao registrar movimentação",
+        variant: "destructive",
+      })
+      throw error
+    }
+  }
+
+  // Carregar dados iniciais
+  useEffect(() => {
+    if (user?.id) {
+      carregarMovimentacoes()
+      carregarProdutos()
+    }
+  }, [user?.id])
+
+  // Calcular estatísticas quando movimentações mudarem
+  useEffect(() => {
+    calcularEstatisticas()
+  }, [movimentacoes])
 
   // Função para lidar com código de barras escaneado
   const handleBarcodeScanned = async (barcode: string) => {
@@ -192,11 +412,7 @@ export default function FluxoPage() {
     }
   }
 
-  const totalMovimentacoes = estatisticas.totalMovimentacoes
-  const totalEntradas = estatisticas.totalEntradas
-  const totalSaidas = estatisticas.totalSaidas
-  const valorTotalEntradas = estatisticas.valorTotalEntradas
-  const valorTotalSaidas = estatisticas.valorTotalSaidas
+  const { totalMovimentacoes, totalEntradas, totalSaidas, valorTotalEntradas, valorTotalSaidas } = estatisticas
 
   return (
     <div className="space-y-4 md:space-y-6 w-full max-w-full overflow-hidden">
@@ -291,7 +507,7 @@ export default function FluxoPage() {
                       ) : (
                         produtos.map((produto) => (
                           <SelectItem key={produto.id} value={produto.id}>
-                            {produto.nome.trim()} {produto.marca ? `- ${produto.marca}` : ""} {produto.volume ? `(${produto.volume})` : ""}
+                            {produto.nome.trim()} {produto.marca ? `- ${produto.marca}` : ""}
                           </SelectItem>
                         ))
                       )}
@@ -514,7 +730,6 @@ export default function FluxoPage() {
             </Select>
           </div>
 
-          {/* Loading removido - carregamento instantâneo */}
           {filteredMovimentacoes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Activity className="w-12 h-12 text-slate-600 mb-4" />

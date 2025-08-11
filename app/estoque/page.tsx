@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { useProdutos } from "@/hooks/use-produtos"
-import { LoadingSpinner } from "@/components/loading-spinner"
+import { useState, useEffect } from "react"
+import { supabase } from "@/lib/supabase"
+import { useAuthContext } from "@/components/providers/auth-provider"
 import { ProdutoModal } from "@/components/produto-modal"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -45,16 +45,196 @@ import {
 } from "lucide-react"
 
 import { BarcodeScanner } from "@/components/barcode-scanner"
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/components/ui/use-toast"
+
+interface Produto {
+  id: string
+  nome: string
+  marca?: string | null
+  volume?: string | null
+  categoria: string
+  estoque_atual: number
+  estoque_minimo: number
+  preco_compra: number
+  preco_venda: number
+  codigo_barras?: string
+  data_validade?: string
+  fornecedor?: string
+  ativo: boolean
+}
 
 export default function EstoquePage() {
-  const { produtos, loading, error, criarProduto, atualizarProduto, deletarProduto, buscarPorCodigoBarras } = useProdutos()
-  const { toast } = useToast()
+  const [produtos, setProdutos] = useState<Produto[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [filterCategory, setFilterCategory] = useState("all")
-  const [selectedProduct, setSelectedProduct] = useState<any>(null)
-  const [editingProduct, setEditingProduct] = useState<any>(null)
-  const [deletingProduct, setDeletingProduct] = useState<any>(null)
+  const [selectedProduct, setSelectedProduct] = useState<Produto | null>(null)
+  const [editingProduct, setEditingProduct] = useState<Produto | null>(null)
+  const [deletingProduct, setDeletingProduct] = useState<Produto | null>(null)
+  
+  const { user } = useAuthContext()
+  const { toast } = useToast()
+
+  // Funções diretas do Supabase
+  const carregarProdutos = async () => {
+    if (!user?.id) return
+    
+    try {
+      const { data, error } = await supabase
+        .from("produtos")
+        .select("*")
+        .eq("usuario_id", user.id)
+        .eq("ativo", true)
+        .order("nome")
+      
+      if (error) throw error
+      setProdutos(data || [])
+    } catch (error) {
+      console.error("Erro ao carregar produtos:", error)
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar produtos",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const buscarPorCodigoBarras = async (codigoBarras: string) => {
+    if (!user?.id) return null
+
+    try {
+      const { data, error } = await supabase
+        .from("produtos")
+        .select("*")
+        .eq("usuario_id", user.id)
+        .eq("codigo_barras", codigoBarras)
+        .eq("ativo", true)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') return null
+        throw error
+      }
+      
+      return data
+    } catch (error) {
+      console.error("Erro ao buscar produto por código de barras:", error)
+      return null
+    }
+  }
+
+  const criarProduto = async (produto: any) => {
+    if (!user?.id) return
+
+    try {
+      const dadosLimpos = {
+        ...produto,
+        usuario_id: user.id,
+        ativo: true,
+      }
+
+      // Limpar campos vazios
+      if (!dadosLimpos.data_validade) delete dadosLimpos.data_validade
+      if (!dadosLimpos.marca) dadosLimpos.marca = null
+      if (!dadosLimpos.volume) dadosLimpos.volume = null
+      if (!dadosLimpos.fornecedor) dadosLimpos.fornecedor = null
+
+      const { data, error } = await supabase
+        .from("produtos")
+        .insert(dadosLimpos)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      setProdutos(prev => [data, ...prev])
+      
+      toast({
+        title: "Sucesso",
+        description: "Produto criado com sucesso",
+      })
+
+      return data
+    } catch (error) {
+      console.error("Erro ao criar produto:", error)
+      toast({
+        title: "Erro",
+        description: "Erro ao criar produto",
+        variant: "destructive",
+      })
+      throw error
+    }
+  }
+
+  const atualizarProduto = async (id: string, atualizacoes: any) => {
+    if (!user?.id) return
+
+    try {
+      const { data, error } = await supabase
+        .from("produtos")
+        .update(atualizacoes)
+        .eq("id", id)
+        .eq("usuario_id", user.id)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      setProdutos(prev =>
+        prev.map(produto => produto.id === id ? data : produto)
+      )
+
+      toast({
+        title: "Sucesso",
+        description: "Produto atualizado com sucesso",
+      })
+
+      return data
+    } catch (error) {
+      console.error("Erro ao atualizar produto:", error)
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar produto",
+        variant: "destructive",
+      })
+      throw error
+    }
+  }
+
+  const deletarProduto = async (id: string) => {
+    if (!user?.id) return
+
+    try {
+      const { error } = await supabase
+        .from("produtos")
+        .update({ ativo: false })
+        .eq("id", id)
+        .eq("usuario_id", user.id)
+
+      if (error) throw error
+
+      setProdutos(prev => prev.filter(produto => produto.id !== id))
+      
+      toast({
+        title: "Sucesso",
+        description: "Produto removido com sucesso",
+      })
+    } catch (error) {
+      console.error("Erro ao deletar produto:", error)
+      toast({
+        title: "Erro",
+        description: "Erro ao deletar produto",
+        variant: "destructive",
+      })
+      throw error
+    }
+  }
+
+  // Carregar produtos na inicialização
+  useEffect(() => {
+    if (user?.id) {
+      carregarProdutos()
+    }
+  }, [user?.id])
 
   // Função para lidar com código de barras escaneado
   const handleBarcodeScanned = async (barcode: string) => {
@@ -157,10 +337,10 @@ export default function EstoquePage() {
         // Garantir que os valores numéricos estão corretos
         const produtoAtualizado = {
           ...editingProduct,
-          estoque_atual: parseInt(editingProduct.estoque_atual) || 0,
-          estoque_minimo: parseInt(editingProduct.estoque_minimo) || 0,
-          preco_compra: parseFloat(editingProduct.preco_compra) || 0,
-          preco_venda: parseFloat(editingProduct.preco_venda) || 0,
+          estoque_atual: typeof editingProduct.estoque_atual === 'string' ? parseInt(editingProduct.estoque_atual) || 0 : editingProduct.estoque_atual,
+          estoque_minimo: typeof editingProduct.estoque_minimo === 'string' ? parseInt(editingProduct.estoque_minimo) || 0 : editingProduct.estoque_minimo,
+          preco_compra: typeof editingProduct.preco_compra === 'string' ? parseFloat(editingProduct.preco_compra) || 0 : editingProduct.preco_compra,
+          preco_venda: typeof editingProduct.preco_venda === 'string' ? parseFloat(editingProduct.preco_venda) || 0 : editingProduct.preco_venda,
         }
         
         await atualizarProduto(editingProduct.id, produtoAtualizado)
@@ -178,16 +358,6 @@ export default function EstoquePage() {
     (p) => p.estoque_atual < p.estoque_minimo && p.estoque_atual >= p.estoque_minimo * 0.5,
   ).length
   const valorTotalEstoque = produtos.reduce((total, produto) => total + produto.estoque_atual * produto.preco_compra, 0)
-
-  // Remover loading completamente - carregamento instantâneo
-
-  if (error) {
-    return (
-      <div className="text-red-400 text-center py-8">
-        Erro ao carregar produtos: {error}
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-6 max-w-full overflow-hidden">

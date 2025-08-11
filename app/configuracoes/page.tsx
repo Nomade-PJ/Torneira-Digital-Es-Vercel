@@ -20,20 +20,27 @@ import {
   Mail,
   Phone,
 } from "lucide-react"
-import { useConfiguracoes } from "@/hooks/use-configuracoes"
-import { LoadingSpinner } from "@/components/loading-spinner"
+import { supabase } from "@/lib/supabase"
+import { useAuthContext } from "@/components/providers/auth-provider"
+import { useToast } from "@/components/ui/use-toast"
+
+interface Configuracao {
+  id: string
+  nome_estabelecimento: string
+  email_contato: string
+  telefone: string
+  notificacao_estoque_baixo: boolean
+  notificacao_email: boolean
+  estoque_minimo_padrao: number
+  alerta_estoque_critico: number
+  backup_automatico: boolean
+  updated_at: string
+}
 
 export default function ConfiguracoesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const {
-    configuracoes,
-    loading,
-    saving,
-    salvarConfiguracoes,
-    restaurarPadrao,
-    exportarConfiguracoes,
-    importarConfiguracoes,
-  } = useConfiguracoes()
+  const [configuracoes, setConfiguracoes] = useState<Configuracao | null>(null)
+  const [saving, setSaving] = useState(false)
 
   const [formData, setFormData] = useState({
     nome_estabelecimento: "",
@@ -46,58 +53,281 @@ export default function ConfiguracoesPage() {
     backup_automatico: true,
   })
 
-  // Atualizar form quando configurações carregarem
-  useEffect(() => {
-    if (configuracoes) {
-      setFormData({
-        nome_estabelecimento: configuracoes.nome_estabelecimento || "",
-        email_contato: configuracoes.email_contato || "",
-        telefone: configuracoes.telefone || "",
-        notificacao_estoque_baixo: configuracoes.notificacao_estoque_baixo || false,
-        notificacao_email: configuracoes.notificacao_email || false,
-        estoque_minimo_padrao: configuracoes.estoque_minimo_padrao || 20,
-        alerta_estoque_critico: configuracoes.alerta_estoque_critico || 5,
-        backup_automatico: configuracoes.backup_automatico || false,
+  const { user } = useAuthContext()
+  const { toast } = useToast()
+
+  // Carregar configurações
+  const carregarConfiguracoes = async () => {
+    if (!user?.id) return
+
+    try {
+      const { data, error } = await supabase
+        .from("configuracoes")
+        .select("*")
+        .eq("usuario_id", user.id)
+        .single()
+
+      if (error && error.code !== "PGRST116") {
+        throw error
+      }
+
+      if (data) {
+        setConfiguracoes(data)
+        setFormData({
+          nome_estabelecimento: data.nome_estabelecimento || "",
+          email_contato: data.email_contato || "",
+          telefone: data.telefone || "",
+          notificacao_estoque_baixo: data.notificacao_estoque_baixo || false,
+          notificacao_email: data.notificacao_email || false,
+          estoque_minimo_padrao: data.estoque_minimo_padrao || 20,
+          alerta_estoque_critico: data.alerta_estoque_critico || 5,
+          backup_automatico: data.backup_automatico || false,
+        })
+      } else {
+        // Criar configuração inicial
+        await criarConfiguracaoInicial()
+      }
+    } catch (error) {
+      console.error("Erro ao carregar configurações:", error)
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar configurações",
+        variant: "destructive",
       })
     }
-  }, [configuracoes])
+  }
 
+  // Criar configuração inicial
+  const criarConfiguracaoInicial = async () => {
+    if (!user?.id) return
+
+    try {
+      const novaConfig = {
+        usuario_id: user.id,
+        nome_estabelecimento: "Torneira Digital",
+        email_contato: user.email || "",
+        telefone: "(11) 99999-9999",
+        notificacao_estoque_baixo: true,
+        notificacao_email: true,
+        estoque_minimo_padrao: 20,
+        alerta_estoque_critico: 5,
+        backup_automatico: true,
+      }
+
+      const { data, error } = await supabase
+        .from("configuracoes")
+        .insert(novaConfig)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      setConfiguracoes(data)
+      setFormData({
+        nome_estabelecimento: data.nome_estabelecimento || "",
+        email_contato: data.email_contato || "",
+        telefone: data.telefone || "",
+        notificacao_estoque_baixo: data.notificacao_estoque_baixo || false,
+        notificacao_email: data.notificacao_email || false,
+        estoque_minimo_padrao: data.estoque_minimo_padrao || 20,
+        alerta_estoque_critico: data.alerta_estoque_critico || 5,
+        backup_automatico: data.backup_automatico || false,
+      })
+      
+      toast({
+        title: "Configurações criadas",
+        description: "Configurações foram criadas com seus dados de cadastro",
+      })
+    } catch (error) {
+      console.error("Erro ao criar configuração inicial:", error)
+      toast({
+        title: "Erro",
+        description: "Erro ao criar configurações iniciais",
+        variant: "destructive",
+      })
+    }
+  }
+
+  // Carregar configurações na inicialização
+  useEffect(() => {
+    if (user?.id) {
+      carregarConfiguracoes()
+    }
+  }, [user?.id])
+
+  // Salvar configurações
   const handleSave = async () => {
+    if (!user?.id || !configuracoes) {
+      toast({
+        title: "Erro",
+        description: "Usuário não autenticado ou configurações não carregadas",
+        variant: "destructive",
+      })
+      return
+    }
+
     try {
-      await salvarConfiguracoes(formData)
+      setSaving(true)
+      
+      const { data, error } = await supabase
+        .from("configuracoes")
+        .update(formData)
+        .eq("usuario_id", user.id)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      setConfiguracoes(data)
+      
+      toast({
+        title: "Sucesso",
+        description: "Configurações salvas com sucesso",
+      })
     } catch (error) {
-      console.error("Erro ao salvar:", error)
+      console.error("Erro ao salvar configurações:", error)
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar configurações",
+        variant: "destructive",
+      })
+    } finally {
+      setSaving(false)
     }
   }
 
+  // Restaurar configurações padrão
   const handleRestore = async () => {
+    if (!user?.id) return
+
     try {
-      await restaurarPadrao()
+      setSaving(true)
+      
+      const configPadrao = {
+        nome_estabelecimento: "Torneira Digital",
+        email_contato: user.email || "",
+        telefone: "(11) 99999-9999",
+        notificacao_estoque_baixo: true,
+        notificacao_email: true,
+        estoque_minimo_padrao: 20,
+        alerta_estoque_critico: 5,
+        backup_automatico: true,
+      }
+
+      const { data, error } = await supabase
+        .from("configuracoes")
+        .update(configPadrao)
+        .eq("usuario_id", user.id)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      setConfiguracoes(data)
+      setFormData(configPadrao)
+      
+      toast({
+        title: "Sucesso",
+        description: "Configurações restauradas para o padrão",
+      })
     } catch (error) {
-      console.error("Erro ao restaurar:", error)
+      console.error("Erro ao restaurar configurações:", error)
+      toast({
+        title: "Erro",
+        description: "Erro ao restaurar configurações",
+        variant: "destructive",
+      })
+    } finally {
+      setSaving(false)
     }
   }
 
+  // Exportar configurações
   const handleExportData = () => {
-    exportarConfiguracoes()
+    if (!configuracoes) return
+
+    const dadosExport = {
+      configuracoes,
+      dataExport: new Date().toISOString(),
+      versao: "1.0",
+    }
+
+    const blob = new Blob([JSON.stringify(dadosExport, null, 2)], {
+      type: "application/json",
+    })
+
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `configuracoes-torneira-digital-${new Date().toISOString().split("T")[0]}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+
+    toast({
+      title: "Sucesso",
+      description: "Configurações exportadas com sucesso",
+    })
   }
 
   const handleImportData = () => {
     fileInputRef.current?.click()
   }
 
+  // Importar configurações
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file) {
-      try {
-        await importarConfiguracoes(file)
-      } catch (error) {
-        console.error("Erro ao importar:", error)
+    if (!file) return
+
+    try {
+      const texto = await file.text()
+      const dados = JSON.parse(texto)
+
+      if (!dados.configuracoes) {
+        throw new Error("Arquivo inválido")
       }
+
+      // Remover campos que não devem ser importados
+      const { id, usuario_id, created_at, updated_at, ...configImport } = dados.configuracoes
+
+      setSaving(true)
+      const { data, error } = await supabase
+        .from("configuracoes")
+        .update(configImport)
+        .eq("usuario_id", user?.id)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      setConfiguracoes(data)
+      setFormData({
+        nome_estabelecimento: data.nome_estabelecimento || "",
+        email_contato: data.email_contato || "",
+        telefone: data.telefone || "",
+        notificacao_estoque_baixo: data.notificacao_estoque_baixo || false,
+        notificacao_email: data.notificacao_email || false,
+        estoque_minimo_padrao: data.estoque_minimo_padrao || 20,
+        alerta_estoque_critico: data.alerta_estoque_critico || 5,
+        backup_automatico: data.backup_automatico || false,
+      })
+
+      toast({
+        title: "Sucesso",
+        description: "Configurações importadas com sucesso",
+      })
+    } catch (error) {
+      console.error("Erro ao importar configurações:", error)
+      toast({
+        title: "Erro",
+        description: "Erro ao importar configurações. Verifique o arquivo.",
+        variant: "destructive",
+      })
+    } finally {
+      setSaving(false)
     }
   }
-
-  // Remover loading completamente - carregamento instantâneo
 
   return (
     <div className="space-y-4 md:space-y-6 p-2 md:p-0">
@@ -127,7 +357,7 @@ export default function ConfiguracoesPage() {
             disabled={saving}
           >
             {saving ? (
-              <LoadingSpinner className="w-4 h-4 mr-2" />
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-900 mr-2"></div>
             ) : (
               <Save className="w-4 h-4 mr-2" />
             )}
