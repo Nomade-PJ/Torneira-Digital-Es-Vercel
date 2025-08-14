@@ -21,8 +21,19 @@ const nextConfig = {
   // Configurações experimentais para máxima performance
   experimental: {
     // optimizeCss: true, // Desabilitado temporariamente - causa erro com critters
-    optimizePackageImports: ['@supabase/supabase-js', 'lucide-react'],
+    optimizePackageImports: ['lucide-react'],
   },
+  
+  // Configuração correta para pacotes externos
+  serverExternalPackages: ['@supabase/supabase-js'],
+
+  // Configurações de performance para Vercel
+  async rewrites() {
+    return []
+  },
+
+  // Otimizações para Edge Runtime
+  output: 'standalone',
   // Headers de segurança
   async headers() {
     return [

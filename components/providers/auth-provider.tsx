@@ -4,6 +4,7 @@ import { createContext, useContext, type ReactNode, useState, useEffect } from "
 import { authService } from "@/lib/auth"
 import { supabase } from "@/lib/supabase"
 import { sessionManager } from "@/lib/session-cache"
+import { debugLog, useProductionOptimizations } from "@/lib/cache-cleaner"
 import type { User, Session } from "@supabase/supabase-js"
 
 interface AuthContextType {
@@ -23,13 +24,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Otimizações para produção
+  useProductionOptimizations()
+
   useEffect(() => {
     // Verificar sessão inicial com cache ultra-rápido
     const initializeAuth = async () => {
       try {
+        debugLog('Inicializando autenticação...')
+        
         // 1. Verificar cache primeiro (instantâneo)
         const cached = sessionManager.getSession()
         if (cached) {
+          debugLog('Usando sessão do cache')
           setSession(cached.session)
           setUser(cached.user)
           setLoading(false)
@@ -37,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         // 2. Se não há cache, buscar do Supabase
+        debugLog('Buscando sessão do Supabase...')
         const { data: { session } } = await supabase.auth.getSession()
         
         if (session?.user) {

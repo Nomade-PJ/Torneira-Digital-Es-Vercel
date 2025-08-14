@@ -8,7 +8,7 @@ interface SessionCache {
 
 class SessionManager {
   private cache: SessionCache | null = null
-  private readonly CACHE_DURATION = 2 * 60 * 1000 // 2 minutos
+  private readonly CACHE_DURATION = 5 * 60 * 1000 // 5 minutos - mais longo para produção
 
   setSession(user: any, session: any) {
     this.cache = {
@@ -21,6 +21,7 @@ class SessionManager {
 
   getSession(): { user: any; session: any } | null {
     if (!this.cache || Date.now() > this.cache.expiryTime) {
+      this.cache = null // Limpar cache expirado
       return null
     }
     return {

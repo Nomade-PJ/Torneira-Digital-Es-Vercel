@@ -78,6 +78,7 @@ export default function EstoquePage() {
   const carregarProdutos = useCallback(async () => {
     if (!user?.id) return
     
+    console.log('🔄 Carregando produtos...', new Date().toISOString())
     try {
       const { data, error } = await supabase
         .from("produtos")
