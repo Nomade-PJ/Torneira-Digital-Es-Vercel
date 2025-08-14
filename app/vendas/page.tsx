@@ -71,13 +71,58 @@ export default function VendasPageSimple() {
   const { user } = useAuthContext()
   const { toast } = useToast()
 
+  // Função para debug da estrutura das tabelas
+  const debugTabelaVendas = async () => {
+    try {
+      // 1. Teste tabela vendas
+      const testVenda = {
+        usuario_id: user?.id,
+        total: 10.50,
+        forma_pagamento: 'teste'
+      }
+      
+      const { data: vendaData, error: vendaError } = await supabase
+        .from("vendas")
+        .insert(testVenda)
+        .select()
+        .single()
+      
+      if (vendaError) {
+        return
+      }
+      
+      // 2. Teste tabela itens_venda
+      const testItem = {
+        venda_id: vendaData.id,
+        produto_id: '12345678-1234-1234-1234-123456789012', // UUID fictício
+        quantidade: 1,
+        preco_unitario: 5.25
+      }
+      
+      const { data: itemData, error: itemError } = await supabase
+        .from("itens_venda")
+        .insert(testItem)
+        .select()
+        .single()
+      
+      if (!itemError && itemData) {
+        // Limpar teste
+        await supabase.from("itens_venda").delete().eq('id', itemData.id)
+      }
+      
+      // Limpar teste da venda
+      await supabase.from("vendas").delete().eq('id', vendaData.id)
+      
+    } catch (error) {
+      // Silencioso
+    }
+  }
+
   // Carregar dados diretamente - SEM CACHE
   const carregarDados = useCallback(async () => {
     if (!user?.id) return
 
     try {
-      console.log('🔄 Carregando dados...', new Date().toISOString())
-      
       // Buscar tudo em paralelo
       const [produtosRes, clientesRes, vendasRes] = await Promise.all([
         supabase
@@ -104,12 +149,6 @@ export default function VendasPageSimple() {
       if (clientesRes.error) throw clientesRes.error
       if (vendasRes.error) throw vendasRes.error
 
-      console.log('✅ Dados carregados:', {
-        produtos: produtosRes.data?.length,
-        clientes: clientesRes.data?.length,
-        vendas: vendasRes.data?.length
-      })
-
       setProdutos(produtosRes.data || [])
       setClientes(clientesRes.data || [])
       
@@ -126,7 +165,6 @@ export default function VendasPageSimple() {
        })
 
     } catch (error) {
-      console.error("❌ Erro ao carregar dados:", error)
       toast({
         title: "Erro",
         description: "Erro ao carregar dados. Tente novamente.",
@@ -217,38 +255,52 @@ export default function VendasPageSimple() {
     try {
       setLoading(true)
 
-             // Criar venda
+             // Criar venda com campos essenciais apenas
+       const vendaData: any = {
+         usuario_id: user?.id,
+         total: Number(total) || 0,
+         forma_pagamento: formaPagamento || 'dinheiro',
+         data_venda: new Date().toISOString()
+         // Removemos subtotal pois pode ser auto-gerado
+       }
+
+       // Adicionar campos opcionais apenas se tiverem valor
+       if (clienteSelecionado?.id) {
+         vendaData.cliente_id = clienteSelecionado.id
+       }
+       if (Number(descontoTotal) > 0) {
+         vendaData.desconto = Number(descontoTotal)
+       }
+       if (observacoes && observacoes.trim()) {
+         vendaData.observacoes = observacoes.trim()
+       }
+
        const { data: venda, error: vendaError } = await supabase
          .from("vendas")
-         .insert({
-           usuario_id: user?.id,
-           cliente_id: clienteSelecionado?.id,
-           subtotal,
-           desconto: descontoTotal,
-           total: total,
-           forma_pagamento: formaPagamento,
-           observacoes,
-           data_venda: new Date().toISOString()
-         })
+         .insert(vendaData)
         .select()
         .single()
 
-      if (vendaError) throw vendaError
+      if (vendaError) {
+        throw vendaError
+      }
 
-      // Criar itens da venda
+      // Criar itens da venda (removendo subtotal que é gerado automaticamente)
       const itensVenda = carrinho.map(item => ({
         venda_id: venda.id,
         produto_id: item.produto.id,
-        quantidade: item.quantidade,
-        preco_unitario: item.produto.preco_venda,
-        subtotal: item.produto.preco_venda * item.quantidade
+        quantidade: Number(item.quantidade) || 1,
+        preco_unitario: Number(item.produto.preco_venda) || 0
+        // subtotal é gerado automaticamente pela base de dados
       }))
 
       const { error: itensError } = await supabase
         .from("itens_venda")
         .insert(itensVenda)
 
-      if (itensError) throw itensError
+      if (itensError) {
+        throw itensError
+      }
 
       // Atualizar estoque
       for (const item of carrinho) {
@@ -277,28 +329,33 @@ export default function VendasPageSimple() {
       // Recarregar dados
       carregarDados()
 
-    } catch (error) {
-      console.error("Erro ao finalizar venda:", error)
-      toast({
-        title: "Erro",
-        description: "Erro ao finalizar venda. Tente novamente.",
-        variant: "destructive",
-      })
+    } catch (error: any) {
+      // Verificar se é erro específico do Supabase
+      if (error?.message?.includes('subtotal')) {
+        toast({
+          title: "Erro de Configuração",
+          description: "Problema na estrutura do banco. Verifique as configurações.",
+          variant: "destructive",
+        })
+      } else if (error?.message?.includes('Cannot insert')) {
+        toast({
+          title: "Erro de Inserção",
+          description: "Problema ao salvar dados. Verifique as informações.",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Erro",
+          description: `Erro ao finalizar venda: ${error?.message || 'Erro desconhecido'}`,
+          variant: "destructive",
+        })
+      }
     } finally {
       setLoading(false)
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto mb-4"></div>
-          <p className="text-slate-400">Carregando dados...</p>
-        </div>
-      </div>
-    )
-  }
+
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -310,13 +367,18 @@ export default function VendasPageSimple() {
           </h1>
           <p className="text-slate-400">Sistema de vendas integrado com estoque</p>
         </div>
-        <div className="flex items-center gap-4">
-          {carrinho.length > 0 && (
-            <Badge variant="secondary" className="px-3 py-1">
-              {carrinho.length} {carrinho.length === 1 ? 'item' : 'itens'} no carrinho
-            </Badge>
-          )}
-        </div>
+                 <div className="flex items-center gap-4">
+           {carrinho.length > 0 && (
+             <Badge variant="secondary" className="px-3 py-1">
+               {carrinho.length} {carrinho.length === 1 ? 'item' : 'itens'} no carrinho
+             </Badge>
+           )}
+           {process.env.NODE_ENV === 'development' && (
+             <Button variant="outline" size="sm" onClick={debugTabelaVendas}>
+               🔍 Debug DB
+             </Button>
+           )}
+         </div>
       </div>
 
       {/* Estatísticas */}

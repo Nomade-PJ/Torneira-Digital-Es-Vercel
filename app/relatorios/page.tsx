@@ -150,7 +150,7 @@ export default function RelatoriosPage() {
       })
 
     } catch (error) {
-      console.error("Erro ao carregar estatísticas:", error)
+
       toast({
         title: "Erro",
         description: "Erro ao carregar dados dos relatórios",
@@ -213,7 +213,7 @@ export default function RelatoriosPage() {
 
       setProdutosMaisVendidos(top5)
     } catch (error) {
-      console.error("Erro ao buscar produtos mais vendidos:", error)
+
     }
   }, [user?.id, periodo])
 

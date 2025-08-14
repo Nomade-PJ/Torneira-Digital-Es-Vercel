@@ -134,7 +134,6 @@ export default function FluxoPage() {
       if (error) throw error
       setMovimentacoes(data || [])
     } catch (error) {
-      console.error("Erro ao carregar movimentações:", error)
       toast({
         title: "Erro",
         description: "Erro ao carregar movimentações",
@@ -157,7 +156,7 @@ export default function FluxoPage() {
       if (error) throw error
       setProdutos(data || [])
     } catch (error) {
-      console.error("Erro ao carregar produtos:", error)
+
     }
   }, [user?.id])
 
@@ -200,7 +199,7 @@ export default function FluxoPage() {
       
       return data
     } catch (error) {
-      console.error("Erro ao buscar produto por código de barras:", error)
+
       return null
     }
   }
@@ -270,7 +269,7 @@ export default function FluxoPage() {
 
       return novaMovimentacao
     } catch (error: any) {
-      console.error("Erro ao criar movimentação:", error)
+
       toast({
         title: "Erro",
         description: error.message || "Erro ao registrar movimentação",
@@ -320,7 +319,7 @@ export default function FluxoPage() {
         })
       }
     } catch (error) {
-      console.error("Erro ao processar código de barras:", error)
+
       toast({
         title: "Erro",
         description: "Erro ao processar código de barras",
@@ -408,7 +407,7 @@ export default function FluxoPage() {
       setIsDialogOpen(false)
       resetForm()
     } catch (error) {
-      console.error("Erro ao criar movimentação:", error)
+
     }
   }
 

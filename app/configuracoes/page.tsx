@@ -88,7 +88,7 @@ export default function ConfiguracoesPage() {
         await criarConfiguracaoInicial()
       }
     } catch (error) {
-      console.error("Erro ao carregar configurações:", error)
+
       toast({
         title: "Erro",
         description: "Erro ao carregar configurações",
@@ -139,7 +139,7 @@ export default function ConfiguracoesPage() {
         description: "Configurações foram criadas com seus dados de cadastro",
       })
     } catch (error) {
-      console.error("Erro ao criar configuração inicial:", error)
+
       toast({
         title: "Erro",
         description: "Erro ao criar configurações iniciais",
@@ -185,7 +185,7 @@ export default function ConfiguracoesPage() {
         description: "Configurações salvas com sucesso",
       })
     } catch (error) {
-      console.error("Erro ao salvar configurações:", error)
+
       toast({
         title: "Erro",
         description: "Erro ao salvar configurações",
@@ -231,7 +231,7 @@ export default function ConfiguracoesPage() {
         description: "Configurações restauradas para o padrão",
       })
     } catch (error) {
-      console.error("Erro ao restaurar configurações:", error)
+
       toast({
         title: "Erro",
         description: "Erro ao restaurar configurações",
@@ -318,7 +318,7 @@ export default function ConfiguracoesPage() {
         description: "Configurações importadas com sucesso",
       })
     } catch (error) {
-      console.error("Erro ao importar configurações:", error)
+
       toast({
         title: "Erro",
         description: "Erro ao importar configurações. Verifique o arquivo.",

@@ -78,7 +78,6 @@ export default function EstoquePage() {
   const carregarProdutos = useCallback(async () => {
     if (!user?.id) return
     
-    console.log('🔄 Carregando produtos...', new Date().toISOString())
     try {
       const { data, error } = await supabase
         .from("produtos")
@@ -90,7 +89,6 @@ export default function EstoquePage() {
       if (error) throw error
       setProdutos(data || [])
     } catch (error) {
-      console.error("Erro ao carregar produtos:", error)
       toast({
         title: "Erro",
         description: "Erro ao carregar produtos",
@@ -118,7 +116,6 @@ export default function EstoquePage() {
       
       return data
     } catch (error) {
-      console.error("Erro ao buscar produto por código de barras:", error)
       return null
     }
   }
@@ -156,7 +153,6 @@ export default function EstoquePage() {
 
       return data
     } catch (error) {
-      console.error("Erro ao criar produto:", error)
       toast({
         title: "Erro",
         description: "Erro ao criar produto",
@@ -191,7 +187,6 @@ export default function EstoquePage() {
 
       return data
     } catch (error) {
-      console.error("Erro ao atualizar produto:", error)
       toast({
         title: "Erro",
         description: "Erro ao atualizar produto",
@@ -220,7 +215,6 @@ export default function EstoquePage() {
         description: "Produto removido com sucesso",
       })
     } catch (error) {
-      console.error("Erro ao deletar produto:", error)
       toast({
         title: "Erro",
         description: "Erro ao deletar produto",
@@ -262,7 +256,6 @@ export default function EstoquePage() {
         })
       }
     } catch (error) {
-      console.error("Erro ao processar código de barras:", error)
       toast({
         title: "Erro",
         description: "Erro ao processar código de barras",
@@ -327,7 +320,7 @@ export default function EstoquePage() {
         setIsDeleteDialogOpen(false)
         setDeletingProduct(null)
       } catch (error) {
-        console.error("Erro ao excluir produto:", error)
+        // Erro já tratado na função deletarProduto
       }
     }
   }
@@ -348,7 +341,7 @@ export default function EstoquePage() {
         setIsEditDialogOpen(false)
         setEditingProduct(null)
       } catch (error) {
-        console.error("Erro ao salvar produto:", error)
+        // Erro já tratado na função atualizarProduto
       }
     }
   }
