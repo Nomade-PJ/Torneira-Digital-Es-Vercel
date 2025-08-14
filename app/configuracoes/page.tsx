@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -57,7 +57,7 @@ export default function ConfiguracoesPage() {
   const { toast } = useToast()
 
   // Carregar configurações
-  const carregarConfiguracoes = async () => {
+  const carregarConfiguracoes = useCallback(async () => {
     if (!user?.id) return
 
     try {
@@ -95,7 +95,7 @@ export default function ConfiguracoesPage() {
         variant: "destructive",
       })
     }
-  }
+  }, [user?.id, toast])
 
   // Criar configuração inicial
   const criarConfiguracaoInicial = async () => {
@@ -153,7 +153,7 @@ export default function ConfiguracoesPage() {
     if (user?.id) {
       carregarConfiguracoes()
     }
-  }, [user?.id])
+  }, [user?.id, carregarConfiguracoes])
 
   // Salvar configurações
   const handleSave = async () => {

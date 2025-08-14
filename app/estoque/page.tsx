@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { supabase } from "@/lib/supabase"
 import { useAuthContext } from "@/components/providers/auth-provider"
 import { ProdutoModal } from "@/components/produto-modal"
@@ -75,7 +75,7 @@ export default function EstoquePage() {
   const { toast } = useToast()
 
   // Funções diretas do Supabase
-  const carregarProdutos = async () => {
+  const carregarProdutos = useCallback(async () => {
     if (!user?.id) return
     
     try {
@@ -96,7 +96,7 @@ export default function EstoquePage() {
         variant: "destructive",
       })
     }
-  }
+  }, [user?.id, toast])
 
   const buscarPorCodigoBarras = async (codigoBarras: string) => {
     if (!user?.id) return null
@@ -234,7 +234,7 @@ export default function EstoquePage() {
     if (user?.id) {
       carregarProdutos()
     }
-  }, [user?.id])
+  }, [user?.id, carregarProdutos])
 
   // Função para lidar com código de barras escaneado
   const handleBarcodeScanned = async (barcode: string) => {

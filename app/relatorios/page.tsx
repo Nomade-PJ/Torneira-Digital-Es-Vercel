@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -101,7 +101,7 @@ export default function RelatoriosPage() {
     }
   }
 
-  const carregarEstatisticasGerais = async () => {
+  const carregarEstatisticasGerais = useCallback(async () => {
     if (!user?.id) return
 
     try {
@@ -159,9 +159,9 @@ export default function RelatoriosPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user?.id, periodo])
 
-  const carregarProdutosMaisVendidos = async () => {
+  const carregarProdutosMaisVendidos = useCallback(async () => {
     if (!user?.id) return
 
     try {
@@ -215,7 +215,7 @@ export default function RelatoriosPage() {
     } catch (error) {
       console.error("Erro ao buscar produtos mais vendidos:", error)
     }
-  }
+  }, [user?.id, periodo])
 
   const exportarRelatorioPDF = async () => {
     try {
@@ -250,7 +250,7 @@ export default function RelatoriosPage() {
       carregarEstatisticasGerais()
       carregarProdutosMaisVendidos()
     }
-  }, [user?.id, periodo])
+  }, [user?.id, periodo, carregarEstatisticasGerais, carregarProdutosMaisVendidos])
 
   // Componente para exibir quando não há dados
   const EmptyStateCard = ({ title, description, icon: Icon }: { title: string, description: string, icon: any }) => (

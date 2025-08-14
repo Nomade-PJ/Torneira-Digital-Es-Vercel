@@ -5,7 +5,7 @@ const nextConfig = {
     ignoreDuringBuilds: false, // Habilitar ESLint na build
   },
   typescript: {
-    ignoreBuildErrors: false, // Habilitado após correções
+    ignoreBuildErrors: false, // Manter rigoroso para qualidade
   },
   images: {
     unoptimized: false, // Habilitar otimização de imagens
@@ -17,20 +17,11 @@ const nextConfig = {
   // Otimizações para performance ultra-agressiva
   compress: true,
   poweredByHeader: false,
-  swcMinify: true,
   
   // Configurações experimentais para máxima performance
   experimental: {
-    optimizeCss: true,
+    // optimizeCss: true, // Desabilitado temporariamente - causa erro com critters
     optimizePackageImports: ['@supabase/supabase-js', 'lucide-react'],
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
-      },
-    },
   },
   // Headers de segurança
   async headers() {

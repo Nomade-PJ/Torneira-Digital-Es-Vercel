@@ -295,7 +295,7 @@ export default function VendasPage() {
     } catch (error) {
       console.error("Erro ao carregar dados:", error)
     }
-  }, [user?.id])
+  }, [user?.id, getFromSessionStorage, saveToSessionStorage])
 
   // Carregar dados iniciais COM cache
   useEffect(() => {

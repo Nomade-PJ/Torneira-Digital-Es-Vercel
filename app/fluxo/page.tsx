@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -115,7 +115,7 @@ export default function FluxoPage() {
   const { toast } = useToast()
 
   // Funções diretas do Supabase
-  const carregarMovimentacoes = async () => {
+  const carregarMovimentacoes = useCallback(async () => {
     if (!user?.id) return
     
     try {
@@ -141,9 +141,9 @@ export default function FluxoPage() {
         variant: "destructive",
       })
     }
-  }
+  }, [user?.id, toast])
 
-  const carregarProdutos = async () => {
+  const carregarProdutos = useCallback(async () => {
     if (!user?.id) return
     
     try {
@@ -159,9 +159,9 @@ export default function FluxoPage() {
     } catch (error) {
       console.error("Erro ao carregar produtos:", error)
     }
-  }
+  }, [user?.id])
 
-  const calcularEstatisticas = () => {
+  const calcularEstatisticas = useCallback(() => {
     const totalMovimentacoes = movimentacoes.length
     const totalEntradas = movimentacoes.filter(m => m.tipo === "entrada" && m.status === "concluida").length
     const totalSaidas = movimentacoes.filter(m => m.tipo === "saida" && m.status === "concluida").length
@@ -179,7 +179,7 @@ export default function FluxoPage() {
       valorTotalEntradas,
       valorTotalSaidas,
     })
-  }
+  }, [movimentacoes])
 
   const buscarPorCodigoBarras = async (codigoBarras: string) => {
     if (!user?.id) return null
@@ -286,12 +286,12 @@ export default function FluxoPage() {
       carregarMovimentacoes()
       carregarProdutos()
     }
-  }, [user?.id])
+  }, [user?.id, carregarMovimentacoes, carregarProdutos])
 
   // Calcular estatísticas quando movimentações mudarem
   useEffect(() => {
     calcularEstatisticas()
-  }, [movimentacoes])
+  }, [movimentacoes, calcularEstatisticas])
 
   // Função para lidar com código de barras escaneado
   const handleBarcodeScanned = async (barcode: string) => {
