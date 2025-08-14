@@ -96,7 +96,7 @@ export default function VendasPageSimple() {
           
         supabase
           .from("vendas")
-          .select("total_pago, data_venda")
+          .select("total, data_venda")
           .eq("usuario_id", user.id)
       ])
 
@@ -118,12 +118,12 @@ export default function VendasPageSimple() {
       const hoje = new Date().toISOString().split('T')[0]
       const vendasHoje = vendas.filter(v => v.data_venda?.startsWith(hoje))
       
-      setEstatisticas({
-        vendasHoje: vendasHoje.length,
-        receitaHoje: vendasHoje.reduce((sum, v) => sum + (v.total_pago || 0), 0),
-        totalVendas: vendas.length,
-        receitaTotal: vendas.reduce((sum, v) => sum + (v.total_pago || 0), 0)
-      })
+             setEstatisticas({
+         vendasHoje: vendasHoje.length,
+         receitaHoje: vendasHoje.reduce((sum, v) => sum + (v.total || 0), 0),
+         totalVendas: vendas.length,
+         receitaTotal: vendas.reduce((sum, v) => sum + (v.total || 0), 0)
+       })
 
     } catch (error) {
       console.error("❌ Erro ao carregar dados:", error)
@@ -217,19 +217,19 @@ export default function VendasPageSimple() {
     try {
       setLoading(true)
 
-      // Criar venda
-      const { data: venda, error: vendaError } = await supabase
-        .from("vendas")
-        .insert({
-          usuario_id: user?.id,
-          cliente_id: clienteSelecionado?.id,
-          subtotal,
-          desconto: descontoTotal,
-          total_pago: total,
-          forma_pagamento: formaPagamento,
-          observacoes,
-          data_venda: new Date().toISOString()
-        })
+             // Criar venda
+       const { data: venda, error: vendaError } = await supabase
+         .from("vendas")
+         .insert({
+           usuario_id: user?.id,
+           cliente_id: clienteSelecionado?.id,
+           subtotal,
+           desconto: descontoTotal,
+           total: total,
+           forma_pagamento: formaPagamento,
+           observacoes,
+           data_venda: new Date().toISOString()
+         })
         .select()
         .single()
 
