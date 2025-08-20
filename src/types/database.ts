@@ -55,6 +55,15 @@ export type Database = {
           updated_at?: string | null
           usuario_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "clientes_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       comandas: {
         Row: {
@@ -111,6 +120,22 @@ export type Database = {
           updated_at?: string | null
           usuario_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "comandas_mesa_id_fkey"
+            columns: ["mesa_id"]
+            isOneToOne: false
+            referencedRelation: "mesas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comandas_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       configuracoes: {
         Row: {
@@ -182,173 +207,129 @@ export type Database = {
           updated_at?: string | null
           usuario_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "configuracoes_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: true
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      itens_comanda: {
-        Row: {
-          comanda_id: string
-          created_at: string | null
-          data_pedido: string | null
-          desconto_item: number | null
-          id: string
-          observacoes: string | null
-          preco_unitario: number
-          produto_id: string
-          quantidade: number
-          subtotal: number | null
-        }
-        Insert: {
-          comanda_id: string
-          created_at?: string | null
-          data_pedido?: string | null
-          desconto_item?: number | null
-          id?: string
-          observacoes?: string | null
-          preco_unitario: number
-          produto_id: string
-          quantidade: number
-          subtotal?: number | null
-        }
-        Update: {
-          comanda_id?: string
-          created_at?: string | null
-          data_pedido?: string | null
-          desconto_item?: number | null
-          id?: string
-          observacoes?: string | null
-          preco_unitario?: number
-          produto_id?: string
-          quantidade?: number
-          subtotal?: number | null
-        }
-      }
-      itens_venda: {
-        Row: {
-          created_at: string | null
-          desconto_item: number | null
-          id: string
-          preco_unitario: number
-          produto_id: string
-          quantidade: number
-          subtotal: number | null
-          venda_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          desconto_item?: number | null
-          id?: string
-          preco_unitario: number
-          produto_id: string
-          quantidade: number
-          subtotal?: number | null
-          venda_id: string
-        }
-        Update: {
-          created_at?: string | null
-          desconto_item?: number | null
-          id?: string
-          preco_unitario?: number
-          produto_id?: string
-          quantidade?: number
-          subtotal?: number | null
-          venda_id?: string
-        }
-      }
-      mesas: {
+      funcionalidades: {
         Row: {
           ativo: boolean | null
-          capacidade_pessoas: number | null
+          categoria: string
           created_at: string | null
+          descricao: string | null
           id: string
-          nome_mesa: string | null
-          numero_mesa: number
-          observacoes: string | null
-          status: string | null
-          updated_at: string | null
-          usuario_id: string
+          nome: string
+          ordem_exibicao: number | null
         }
         Insert: {
           ativo?: boolean | null
-          capacidade_pessoas?: number | null
+          categoria: string
           created_at?: string | null
+          descricao?: string | null
           id?: string
-          nome_mesa?: string | null
-          numero_mesa: number
-          observacoes?: string | null
-          status?: string | null
-          updated_at?: string | null
-          usuario_id: string
+          nome: string
+          ordem_exibicao?: number | null
         }
         Update: {
           ativo?: boolean | null
-          capacidade_pessoas?: number | null
+          categoria?: string
           created_at?: string | null
+          descricao?: string | null
           id?: string
-          nome_mesa?: string | null
-          numero_mesa?: number
-          observacoes?: string | null
-          status?: string | null
-          updated_at?: string | null
-          usuario_id?: string
+          nome?: string
+          ordem_exibicao?: number | null
         }
+        Relationships: []
       }
-      movimentacoes: {
+      plano_funcionalidades: {
         Row: {
-          cliente: string | null
           created_at: string | null
-          data_movimentacao: string | null
-          documento: string | null
-          fornecedor: string | null
+          funcionalidade_id: string
           id: string
-          motivo: string
-          observacao: string | null
-          preco_unitario: number | null
-          produto_id: string
-          quantidade: number
-          responsavel: string
-          status: string | null
-          tipo: string
-          updated_at: string | null
-          usuario_id: string
-          valor_total: number | null
+          plano_id: string
         }
         Insert: {
-          cliente?: string | null
           created_at?: string | null
-          data_movimentacao?: string | null
-          documento?: string | null
-          fornecedor?: string | null
+          funcionalidade_id: string
           id?: string
-          motivo: string
-          observacao?: string | null
-          preco_unitario?: number | null
-          produto_id: string
-          quantidade: number
-          responsavel: string
-          status?: string | null
-          tipo: string
-          updated_at?: string | null
-          usuario_id: string
-          valor_total?: number | null
+          plano_id: string
         }
         Update: {
-          cliente?: string | null
           created_at?: string | null
-          data_movimentacao?: string | null
-          documento?: string | null
-          fornecedor?: string | null
+          funcionalidade_id?: string
           id?: string
-          motivo?: string
-          observacao?: string | null
-          preco_unitario?: number | null
-          produto_id?: string
-          quantidade?: number
-          responsavel?: string
-          status?: string | null
-          tipo?: string
-          updated_at?: string | null
-          usuario_id?: string
-          valor_total?: number | null
+          plano_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "plano_funcionalidades_funcionalidade_id_fkey"
+            columns: ["funcionalidade_id"]
+            isOneToOne: false
+            referencedRelation: "funcionalidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plano_funcionalidades_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planos: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          desconto_percentual: number | null
+          descricao: string | null
+          duracao_meses: number
+          id: string
+          nome: string
+          ordem_exibicao: number | null
+          preco_mensal: number
+          preco_total: number
+          recursos: Json | null
+          tem_teste_gratis: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          desconto_percentual?: number | null
+          descricao?: string | null
+          duracao_meses: number
+          id?: string
+          nome: string
+          ordem_exibicao?: number | null
+          preco_mensal: number
+          preco_total: number
+          recursos?: Json | null
+          tem_teste_gratis?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          desconto_percentual?: number | null
+          descricao?: string | null
+          duracao_meses?: number
+          id?: string
+          nome?: string
+          ordem_exibicao?: number | null
+          preco_mensal?: number
+          preco_total?: number
+          recursos?: Json | null
+          tem_teste_gratis?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       produtos: {
         Row: {
@@ -411,18 +392,34 @@ export type Database = {
           usuario_id?: string
           volume?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "produtos_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       usuarios: {
         Row: {
           avatar_url: string | null
           cnpj_cpf: string | null
           created_at: string | null
+          data_assinatura: string | null
+          data_fim_teste: string | null
+          data_inicio_teste: string | null
+          data_vencimento: string | null
+          em_periodo_teste: boolean | null
           email: string
           id: string
           nome: string
           nome_completo: string | null
           nome_estabelecimento: string | null
+          plano_id: string | null
           role: string | null
+          status_assinatura: string | null
           telefone: string | null
           updated_at: string | null
         }
@@ -430,12 +427,19 @@ export type Database = {
           avatar_url?: string | null
           cnpj_cpf?: string | null
           created_at?: string | null
+          data_assinatura?: string | null
+          data_fim_teste?: string | null
+          data_inicio_teste?: string | null
+          data_vencimento?: string | null
+          em_periodo_teste?: boolean | null
           email: string
           id: string
           nome: string
           nome_completo?: string | null
           nome_estabelecimento?: string | null
+          plano_id?: string | null
           role?: string | null
+          status_assinatura?: string | null
           telefone?: string | null
           updated_at?: string | null
         }
@@ -443,68 +447,31 @@ export type Database = {
           avatar_url?: string | null
           cnpj_cpf?: string | null
           created_at?: string | null
+          data_assinatura?: string | null
+          data_fim_teste?: string | null
+          data_inicio_teste?: string | null
+          data_vencimento?: string | null
+          em_periodo_teste?: boolean | null
           email?: string
           id?: string
           nome?: string
           nome_completo?: string | null
           nome_estabelecimento?: string | null
+          plano_id?: string | null
           role?: string | null
+          status_assinatura?: string | null
           telefone?: string | null
           updated_at?: string | null
         }
-      }
-      vendas: {
-        Row: {
-          cliente_id: string | null
-          created_at: string | null
-          data_venda: string | null
-          desconto: number | null
-          forma_pagamento: string
-          id: string
-          numero_venda: string
-          observacoes: string | null
-          parcelas: number | null
-          status: string | null
-          subtotal: number | null
-          total: number
-          updated_at: string | null
-          usuario_id: string
-          vendedor: string | null
-        }
-        Insert: {
-          cliente_id?: string | null
-          created_at?: string | null
-          data_venda?: string | null
-          desconto?: number | null
-          forma_pagamento: string
-          id?: string
-          numero_venda: string
-          observacoes?: string | null
-          parcelas?: number | null
-          status?: string | null
-          subtotal?: number | null
-          total: number
-          updated_at?: string | null
-          usuario_id: string
-          vendedor?: string | null
-        }
-        Update: {
-          cliente_id?: string | null
-          created_at?: string | null
-          data_venda?: string | null
-          desconto?: number | null
-          forma_pagamento?: string
-          id?: string
-          numero_venda?: string
-          observacoes?: string | null
-          parcelas?: number | null
-          status?: string | null
-          subtotal?: number | null
-          total?: number
-          updated_at?: string | null
-          usuario_id?: string
-          vendedor?: string | null
-        }
+        Relationships: [
+          {
+            foreignKeyName: "usuarios_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -516,39 +483,24 @@ export type Database = {
     Enums: {
       [_ in never]: never
     }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
 
-// Tipos auxiliares
-export type Usuario = Database["public"]["Tables"]["usuarios"]["Row"]
-export type Produto = Database["public"]["Tables"]["produtos"]["Row"]
-export type Movimentacao = Database["public"]["Tables"]["movimentacoes"]["Row"]
-export type Configuracao = Database["public"]["Tables"]["configuracoes"]["Row"]
-export type Venda = Database["public"]["Tables"]["vendas"]["Row"]
-export type ItemVenda = Database["public"]["Tables"]["itens_venda"]["Row"]
-export type Cliente = Database["public"]["Tables"]["clientes"]["Row"]
-export type Mesa = Database["public"]["Tables"]["mesas"]["Row"]
-export type Comanda = Database["public"]["Tables"]["comandas"]["Row"]
-export type ItemComanda = Database["public"]["Tables"]["itens_comanda"]["Row"]
+// Tipos auxiliares para as tabelas
+export type Plano = Database['public']['Tables']['planos']['Row']
+export type NovoPlano = Database['public']['Tables']['planos']['Insert']
+export type AtualizarPlano = Database['public']['Tables']['planos']['Update']
 
-export type NovoUsuario = Database["public"]["Tables"]["usuarios"]["Insert"]
-export type NovoProduto = Database["public"]["Tables"]["produtos"]["Insert"]
-export type NovaMovimentacao = Database["public"]["Tables"]["movimentacoes"]["Insert"]
-export type NovaConfiguracao = Database["public"]["Tables"]["configuracoes"]["Insert"]
-export type NovaVenda = Database["public"]["Tables"]["vendas"]["Insert"]
-export type NovoItemVenda = Database["public"]["Tables"]["itens_venda"]["Insert"]
-export type NovoCliente = Database["public"]["Tables"]["clientes"]["Insert"]
-export type NovaMesa = Database["public"]["Tables"]["mesas"]["Insert"]
-export type NovaComanda = Database["public"]["Tables"]["comandas"]["Insert"]
-export type NovoItemComanda = Database["public"]["Tables"]["itens_comanda"]["Insert"]
+export type Usuario = Database['public']['Tables']['usuarios']['Row']
+export type NovoUsuario = Database['public']['Tables']['usuarios']['Insert']
+export type AtualizarUsuario = Database['public']['Tables']['usuarios']['Update']
 
-export type AtualizarUsuario = Database["public"]["Tables"]["usuarios"]["Update"]
-export type AtualizarProduto = Database["public"]["Tables"]["produtos"]["Update"]
-export type AtualizarMovimentacao = Database["public"]["Tables"]["movimentacoes"]["Update"]
-export type AtualizarConfiguracao = Database["public"]["Tables"]["configuracoes"]["Update"]
-export type AtualizarVenda = Database["public"]["Tables"]["vendas"]["Update"]
-export type AtualizarItemVenda = Database["public"]["Tables"]["itens_venda"]["Update"]
-export type AtualizarCliente = Database["public"]["Tables"]["clientes"]["Update"]
-export type AtualizarMesa = Database["public"]["Tables"]["mesas"]["Update"]
-export type AtualizarComanda = Database["public"]["Tables"]["comandas"]["Update"]
-export type AtualizarItemComanda = Database["public"]["Tables"]["itens_comanda"]["Update"]
+export type Funcionalidade = Database['public']['Tables']['funcionalidades']['Row']
+export type PlanoFuncionalidade = Database['public']['Tables']['plano_funcionalidades']['Row']
+
+export type Produto = Database['public']['Tables']['produtos']['Row']
+export type NovoProduto = Database['public']['Tables']['produtos']['Insert']
+export type AtualizarProduto = Database['public']['Tables']['produtos']['Update']

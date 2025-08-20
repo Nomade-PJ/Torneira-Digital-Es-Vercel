@@ -29,7 +29,7 @@ const supabaseOptions = {
     detectSessionInUrl: false,
     flowType: 'implicit' as const,
     storageKey: 'torneira-digital-auth',
-    debug: import.meta.env.DEV // Debug apenas em desenvolvimento
+    debug: false // Desabilitar logs verbosos completamente
   },
   global: {
     headers: {
@@ -43,9 +43,36 @@ const supabaseOptions = {
     params: {
       eventsPerSecond: 10
     }
+  },
+  // Desabilitar logs do GoTrueClient
+  db: {
+    schema: 'public'
   }
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, supabaseOptions)
+
+// Configuração para reduzir logs verbosos do Supabase
+if (typeof window !== 'undefined') {
+  // Interceptar apenas logs específicos do Supabase
+  const originalLog = console.log
+  console.log = (...args: any[]) => {
+    const message = args.join(' ')
+    // Filtrar logs do GoTrueClient
+    if (message.includes('GoTrueClient') || 
+        message.includes('#_acquireLock') || 
+        message.includes('#_useSession') ||
+        message.includes('#__loadSession') ||
+        message.includes('#_autoRefreshTokenTick') ||
+        message.includes('#_recoverAndRefresh') ||
+        message.includes('#onAuthStateChange') ||
+        message.includes('#_onVisibilityChanged') ||
+        message.includes('#_stopAutoRefresh') ||
+        message.includes('#_startAutoRefresh')) {
+      return // Silenciar estes logs
+    }
+    originalLog.apply(console, args)
+  }
+}
 
 

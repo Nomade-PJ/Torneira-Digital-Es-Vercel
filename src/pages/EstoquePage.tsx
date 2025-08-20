@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { supabase } from "../lib/supabase"
 import { useAuthContext } from "../components/providers/auth-provider"
+import { PermissionGate } from "../components/PermissionGate"
 import { ProdutoModal } from "../components/produto-modal"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button"
@@ -318,7 +319,8 @@ export default function EstoquePage() {
   const valorTotalEstoque = produtos.reduce((total, produto) => total + produto.estoque_atual * produto.preco_compra, 0)
 
   return (
-    <div className="space-y-6 max-w-full overflow-hidden">
+    <PermissionGate funcionalidade="estoque_basico">
+      <div className="space-y-6 max-w-full overflow-hidden">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
         <div>
@@ -810,6 +812,7 @@ export default function EstoquePage() {
         onOpenChange={setIsAddDialogOpen}
         onSave={criarProduto}
       />
-    </div>
+      </div>
+    </PermissionGate>
   )
 }

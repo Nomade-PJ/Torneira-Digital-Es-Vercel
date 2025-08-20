@@ -10,7 +10,14 @@ interface AuthContextType {
   session: Session | null
   loading: boolean
   signIn: (credentials: { email: string; password: string }) => Promise<any>
-  signUp: (credentials: any) => Promise<any>
+  signUp: (credentials: { 
+    email: string; 
+    password: string; 
+    nomeEstabelecimento: string; 
+    cnpjCpf: string; 
+    telefone?: string;
+    planoId?: string;
+  }) => Promise<any>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
 }
@@ -58,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth event:', event, 'Session:', !!session)
+      // console.log('Auth event:', event, 'Session:', !!session) // Desabilitado para produção
       
       if (event === 'SIGNED_OUT') {
         // Garantir limpeza completa no logout

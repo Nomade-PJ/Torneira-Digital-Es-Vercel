@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Outlet, useLocation, useNavigate } from "react-router-dom"
 import { useAuthContext } from "./providers/auth-provider"
+import { usePermissions } from "../hooks/usePermissions"
 import { Button } from "./ui/button"
 import { 
   Beer, 
@@ -11,18 +12,20 @@ import {
   LogOut,
   Menu,
   X,
-  ShoppingCart
+  ShoppingCart,
+  Lock
 } from "lucide-react"
 import { cn } from "../lib/utils"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu"
 import { MobileBottomNav } from "./mobile-bottom-nav"
+import { PlanoStatus } from "./PlanoStatus"
 
 const navigation = [
-  { name: "Vendas", href: "/vendas", icon: ShoppingCart },
-  { name: "Estoque", href: "/estoque", icon: Package },
-  { name: "Fluxo", href: "/fluxo", icon: ArrowUpDown },
-  { name: "Relatórios", href: "/relatorios", icon: BarChart3 },
-  { name: "Configurações", href: "/configuracoes", icon: Settings },
+  { name: "Vendas", href: "/vendas", icon: ShoppingCart, permissao: "vendas_basicas" },
+  { name: "Estoque", href: "/estoque", icon: Package, permissao: "estoque_basico" },
+  { name: "Fluxo", href: "/fluxo", icon: ArrowUpDown, permissao: "vendas_basicas" },
+  { name: "Relatórios", href: "/relatorios", icon: BarChart3, permissao: "relatorios_basicos" },
+  { name: "Configurações", href: "/configuracoes", icon: Settings, permissao: null },
 ]
 
 export default function AppLayout() {
@@ -30,6 +33,7 @@ export default function AppLayout() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, signOut } = useAuthContext()
+  const { temPermissao } = usePermissions()
 
   const handleSignOut = async () => {
     try {
@@ -101,24 +105,39 @@ export default function AppLayout() {
                     <ul role="list" className={cn(sidebarCollapsed ? "space-y-3 px-1" : "-mx-2 space-y-1")}>
                       {navigation.map((item) => {
                         const isActive = location.pathname === item.href
+                        const temAcesso = !item.permissao || temPermissao(item.permissao)
+                        
                         return (
                           <li key={item.name}>
                             <Button
                               variant="ghost"
                               className={cn(
-                                "rounded-lg text-sm leading-6 font-semibold transition-all duration-200",
+                                "rounded-lg text-sm leading-6 font-semibold transition-all duration-200 relative",
                                 sidebarCollapsed 
                                   ? "w-12 h-12 p-0 flex items-center justify-center mx-auto" 
                                   : "w-full justify-start gap-x-3 p-3",
                                 isActive
                                   ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 text-amber-400 border border-amber-500/30 shadow-lg"
-                                  : "text-slate-300 hover:text-amber-400 hover:bg-slate-800/70 hover:border hover:border-amber-500/20"
+                                  : temAcesso 
+                                    ? "text-slate-300 hover:text-amber-400 hover:bg-slate-800/70 hover:border hover:border-amber-500/20"
+                                    : "text-slate-500 hover:text-slate-400 cursor-not-allowed opacity-60"
                               )}
-                              onClick={() => navigate(item.href)}
+                              onClick={() => {
+                                if (temAcesso) {
+                                  navigate(item.href)
+                                } else {
+                                  navigate('/planos')
+                                }
+                              }}
                               title={sidebarCollapsed ? item.name : undefined}
                             >
                               <item.icon className={cn("shrink-0", sidebarCollapsed ? "h-6 w-6" : "h-5 w-5")} />
-                              {!sidebarCollapsed && item.name}
+                              {!sidebarCollapsed && (
+                                <span className="flex items-center space-x-2">
+                                  <span>{item.name}</span>
+                                  {!temAcesso && <Lock className="w-4 h-4" />}
+                                </span>
+                              )}
                             </Button>
                           </li>
                         )
@@ -265,7 +284,8 @@ export default function AppLayout() {
         sidebarCollapsed ? "lg:pl-20" : "lg:pl-72"
       )}>
         <main className="py-6 lg:py-10 pb-20 md:pb-6">
-          <div className="px-4 sm:px-6 lg:px-8">
+          <div className="px-4 sm:px-6 lg:px-8 space-y-6">
+            <PlanoStatus />
             <Outlet />
           </div>
         </main>

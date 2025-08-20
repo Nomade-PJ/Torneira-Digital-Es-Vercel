@@ -19,8 +19,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../components/ui/dialog"
-import { Eye, EyeOff, Beer, Mail, Lock, User, KeyRound } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { Eye, EyeOff, Beer, Mail, Lock, User, KeyRound, ArrowLeft, Crown } from "lucide-react"
+import { useNavigate, useSearchParams } from "react-router-dom"
+import { supabase } from "../lib/supabase"
+import type { Plano } from "../types/database"
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -32,6 +34,8 @@ export default function LoginPage() {
   const [resetEmailSent, setResetEmailSent] = useState(false)
   const [error, setError] = useState("")
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
+  const [planoSelecionado, setPlanoSelecionado] = useState<string | null>(null)
+  const [planoInfo, setPlanoInfo] = useState<Plano | null>(null)
   
   // Form data
   const [formData, setFormData] = useState({
@@ -43,14 +47,52 @@ export default function LoginPage() {
   })
   
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { signIn, signUp, resetPassword, user, loading: authLoading } = useAuthContext()
 
-  // Redirecionar se usuário já estiver logado
+  // Verificar plano selecionado e redirecionar se usuário já estiver logado
   useEffect(() => {
-    if (!authLoading && user) {
-      navigate("/vendas")
+    // Verificar se há um plano selecionado na URL
+    const planoId = searchParams.get('plano')
+    if (planoId) {
+      setPlanoSelecionado(planoId)
+      // Mostrar formulário de registro por padrão se há plano selecionado
+      setIsLogin(false)
+      // Buscar informações do plano
+      carregarPlanoInfo(planoId)
     }
-  }, [user, authLoading, navigate])
+
+    if (!authLoading && user) {
+      navigate("/app/vendas")
+    }
+  }, [searchParams, user, authLoading, navigate])
+
+  const carregarPlanoInfo = async (planoId: string) => {
+    try {
+      const { data } = await supabase
+        .from('planos')
+        .select('*')
+        .eq('id', planoId)
+        .single()
+      
+      if (data) {
+        setPlanoInfo(data)
+      }
+    } catch (error) {
+      console.error('Erro ao carregar informações do plano:', error)
+    }
+  }
+
+  const voltarParaPlanos = () => {
+    navigate('/planos')
+  }
+
+  const formatarPreco = (valor: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(valor)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -103,13 +145,20 @@ export default function LoginPage() {
           return
         }
 
+        // Verificar se há plano selecionado para registro
+        if (!planoSelecionado) {
+          setError("Por favor, selecione um plano antes de criar sua conta.")
+          return
+        }
+
         // Registro
         const result = await signUp({
           email: formData.email,
           password: formData.password,
           nomeEstabelecimento: formData.nomeEstabelecimento,
           cnpjCpf: formData.cnpjCpf.replace(/[^\d]/g, ""), // Remove formatação
-          telefone: formData.telefone
+          telefone: formData.telefone,
+          planoId: planoSelecionado
         })
 
         // Se o registro foi bem-sucedido, tentar fazer login automaticamente
@@ -132,7 +181,7 @@ export default function LoginPage() {
         }
       }
       
-      navigate("/vendas")
+      navigate("/app/vendas")
     } catch (error: any) {
       console.error("Erro de autenticação:", error)
       
@@ -172,7 +221,7 @@ export default function LoginPage() {
               email: formData.email,
               password: formData.password
             })
-            navigate("/vendas")
+            navigate("/app/vendas")
           } catch (loginError) {
             console.error("❌ Erro no login automático:", loginError)
             setError("✅ Conta criada com sucesso! Faça login manualmente.")
@@ -229,6 +278,21 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden p-4">
+      
+      {/* Botão voltar para planos */}
+      {planoSelecionado && (
+        <div className="absolute top-6 left-6 z-20">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={voltarParaPlanos}
+            className="bg-slate-800/50 backdrop-blur-xl border-slate-600/50 text-slate-300 hover:bg-slate-700/50 hover:text-slate-100"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar aos Planos
+          </Button>
+        </div>
+      )}
       {/* Background decorativo melhorado */}
       <div className="absolute inset-0 opacity-15">
         <div className="absolute top-10 left-10 w-40 h-40 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 blur-3xl animate-pulse"></div>
@@ -261,6 +325,23 @@ export default function LoginPage() {
             <CardDescription className="text-slate-300 text-lg font-medium">
               {isLogin ? "Entre na sua conta" : "Crie sua conta"}
             </CardDescription>
+            
+            {/* Mostrar plano selecionado */}
+            {planoInfo && !isLogin && (
+              <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/30 backdrop-blur-sm">
+                <div className="flex items-center justify-center space-x-2 mb-2">
+                  <Crown className="w-5 h-5 text-amber-400" />
+                  <span className="text-amber-400 font-semibold">Plano Selecionado</span>
+                </div>
+                <div className="text-slate-200 font-bold text-lg">{planoInfo.nome}</div>
+                <div className="text-slate-300 text-sm">
+                  {formatarPreco(planoInfo.preco_mensal)}/mês
+                  {planoInfo.desconto_percentual && planoInfo.desconto_percentual > 0 && (
+                    <span className="ml-2 text-amber-400">({planoInfo.desconto_percentual}% off)</span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </CardHeader>
 
@@ -435,17 +516,35 @@ export default function LoginPage() {
 
         <CardFooter className="flex flex-col space-y-6 px-10 pb-10">
           <Separator className="bg-slate-600/50" />
-          <div className="text-center">
-            <p className="text-slate-400 text-base mb-2">
-              {isLogin ? "Não tem uma conta?" : "Já tem uma conta?"}
-            </p>
-            <Button
-              variant="link"
-              className="text-amber-400 hover:text-amber-300 p-0 h-auto font-bold text-base transition-colors"
-              onClick={() => setIsLogin(!isLogin)}
-            >
-              {isLogin ? "Criar conta" : "Fazer login"}
-            </Button>
+          <div className="text-center space-y-4">
+            <div>
+              <p className="text-slate-400 text-base mb-2">
+                {isLogin ? "Não tem uma conta?" : "Já tem uma conta?"}
+              </p>
+              <Button
+                variant="link"
+                className="text-amber-400 hover:text-amber-300 p-0 h-auto font-bold text-base transition-colors"
+                onClick={() => setIsLogin(!isLogin)}
+              >
+                {isLogin ? "Criar conta" : "Fazer login"}
+              </Button>
+            </div>
+            
+            {/* Link para planos se não há plano selecionado */}
+            {!planoSelecionado && !isLogin && (
+              <div>
+                <p className="text-slate-400 text-sm mb-2">
+                  Ainda não escolheu um plano?
+                </p>
+                <Button
+                  variant="link"
+                  className="text-purple-400 hover:text-purple-300 p-0 h-auto font-semibold text-sm transition-colors"
+                  onClick={() => navigate('/planos')}
+                >
+                  Ver Planos Disponíveis
+                </Button>
+              </div>
+            )}
           </div>
         </CardFooter>
       </Card>

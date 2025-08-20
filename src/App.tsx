@@ -4,6 +4,8 @@ import { AuthProvider } from './components/providers/auth-provider'
 import { Toaster } from './components/ui/toaster'
 
 // 🔧 Importação das páginas
+import LandingPage from './pages/LandingPage'
+import PlanosPage from './pages/PlanosPage'
 import LoginPage from './pages/LoginPage'
 import VendasPage from './pages/VendasPage'
 import EstoquePage from './pages/EstoquePage'
@@ -20,11 +22,13 @@ function App() {
       <AuthProvider>
         <div className="min-h-screen bg-background">
           <Routes>
-            {/* 🔧 Rota pública */}
+            {/* 🔧 Rotas públicas */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/planos" element={<PlanosPage />} />
             <Route path="/login" element={<LoginPage />} />
             
             {/* 🔧 Rotas protegidas com layout */}
-            <Route path="/" element={
+            <Route path="/app" element={
               <ProtectedRoute>
                 <AppLayout />
               </ProtectedRoute>
@@ -34,11 +38,11 @@ function App() {
               <Route path="fluxo" element={<FluxoPage />} />
               <Route path="relatorios" element={<RelatoriosPage />} />
               <Route path="configuracoes" element={<ConfiguracoesPage />} />
-              <Route index element={<Navigate to="/vendas" replace />} />
+              <Route index element={<Navigate to="/app/vendas" replace />} />
             </Route>
             
             {/* 🔧 Rota 404 */}
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
         

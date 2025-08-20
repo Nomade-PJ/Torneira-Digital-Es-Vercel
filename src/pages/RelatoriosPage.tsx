@@ -3,10 +3,9 @@
 import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button"
-
-
 import { Badge } from "../components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
+import { PermissionGate } from "../components/PermissionGate"
 
 
 
@@ -341,7 +340,8 @@ export default function RelatoriosPage() {
   )
 
   return (
-    <div className="space-y-4 md:space-y-6 p-2 md:p-0">
+    <PermissionGate funcionalidade="relatorios_basicos">
+      <div className="space-y-4 md:space-y-6 p-2 md:p-0">
       {/* Header */}
       <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
         <div>
@@ -573,6 +573,7 @@ export default function RelatoriosPage() {
             </Card>
           </div>
         </div>
-    </div>
+      </div>
+    </PermissionGate>
   )
 }
