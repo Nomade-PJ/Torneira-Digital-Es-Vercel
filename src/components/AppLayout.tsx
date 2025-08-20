@@ -34,10 +34,12 @@ export default function AppLayout() {
   const handleSignOut = async () => {
     try {
       await signOut()
-
-      navigate("/login")
+      // Forçar navegação imediata
+      navigate("/login", { replace: true })
     } catch (error) {
-      console.error('Erro no logout:', error)
+      console.warn('Erro no logout (redirecionando mesmo assim):', error)
+      // Mesmo com erro, redirecionar para login
+      navigate("/login", { replace: true })
     }
   }
 

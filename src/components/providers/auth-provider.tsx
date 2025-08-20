@@ -66,13 +66,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Função de logout melhorada
+  const handleSignOut = async () => {
+    try {
+      // Limpar estado local primeiro
+      setUser(null)
+      setSession(null)
+      
+      // Tentar fazer logout no Supabase
+      const { error } = await supabase.auth.signOut()
+      
+      // Se houver erro, apenas log mas não falhe
+      if (error) {
+        console.warn('Aviso no logout:', error.message)
+      }
+      
+      // Limpar cache local
+      if (typeof window !== 'undefined') {
+        // Limpar localStorage relacionado ao Supabase
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('sb-')) {
+            localStorage.removeItem(key)
+          }
+        })
+      }
+      
+    } catch (error) {
+      console.warn('Erro no logout (não crítico):', error)
+      // Mesmo com erro, limpar estado local
+      setUser(null)
+      setSession(null)
+    }
+  }
+
   const auth = {
     user,
     session,
     loading,
     signIn: authService.signIn,
     signUp: authService.signUp,
-    signOut: authService.signOut,
+    signOut: handleSignOut,
     resetPassword: authService.resetPassword,
   }
 

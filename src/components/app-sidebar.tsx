@@ -90,14 +90,13 @@ export function AppSidebar() {
 
   const handleLogout = async () => {
     try {
-
       await signOut()
-
-      navigate("/login")
+      // Forçar navegação imediata
+      navigate("/login", { replace: true })
     } catch (error) {
-      console.error("Erro ao fazer logout:", error)
+      console.warn("Erro no logout (redirecionando mesmo assim):", error)
       // Mesmo com erro, redirecionar para login
-      navigate("/login")
+      navigate("/login", { replace: true })
     }
   }
 
