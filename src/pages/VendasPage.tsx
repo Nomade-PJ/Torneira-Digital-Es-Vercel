@@ -948,38 +948,30 @@ export default function VendasPageSimple() {
         </Card>
       </div>
 
-      {/* Tabs Navigation - Mobile Optimized */}
+      {/* Tabs Navigation - Compact & Elegant */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-gradient-to-r from-slate-900/95 to-slate-800/90 border-2 border-amber-500/40 rounded-2xl shadow-2xl p-1 backdrop-blur-sm">
+        <TabsList className="grid w-full grid-cols-3 bg-slate-800/60 border border-amber-500/30 rounded-lg shadow-lg h-12">
           <TabsTrigger 
             value="vendas" 
-            className="group data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500/40 data-[state=active]:to-yellow-500/30 data-[state=active]:text-amber-300 data-[state=active]:shadow-xl data-[state=active]:border-2 data-[state=active]:border-amber-400/60 data-[state=active]:scale-105 text-slate-300 hover:text-amber-300 hover:bg-amber-500/10 transition-all duration-300 rounded-xl font-bold text-xs sm:text-sm py-3 sm:py-4 px-2 sm:px-4 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 min-h-[60px] sm:min-h-[50px]"
+            className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 data-[state=active]:border-amber-500/40 text-slate-300 hover:text-amber-300 transition-all duration-200 rounded-md font-medium text-sm flex items-center justify-center gap-2 h-10"
           >
-            <ShoppingCart className="w-5 h-5 sm:w-4 sm:h-4 group-data-[state=active]:text-amber-300 transition-colors" />
-            <span className="text-center leading-tight">
-              <span className="block sm:hidden">Venda</span>
-              <span className="hidden sm:block">🛒 Venda Direta</span>
-            </span>
+            <ShoppingCart className="w-4 h-4" />
+            <span className="hidden sm:inline">Venda Direta</span>
+            <span className="sm:hidden">Venda</span>
           </TabsTrigger>
           <TabsTrigger 
             value="mesas" 
-            className="group data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500/40 data-[state=active]:to-yellow-500/30 data-[state=active]:text-amber-300 data-[state=active]:shadow-xl data-[state=active]:border-2 data-[state=active]:border-amber-400/60 data-[state=active]:scale-105 text-slate-300 hover:text-amber-300 hover:bg-amber-500/10 transition-all duration-300 rounded-xl font-bold text-xs sm:text-sm py-3 sm:py-4 px-2 sm:px-4 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 min-h-[60px] sm:min-h-[50px]"
+            className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 data-[state=active]:border-amber-500/40 text-slate-300 hover:text-amber-300 transition-all duration-200 rounded-md font-medium text-sm flex items-center justify-center gap-2 h-10"
           >
-            <Table className="w-5 h-5 sm:w-4 sm:h-4 group-data-[state=active]:text-amber-300 transition-colors" />
-            <span className="text-center leading-tight">
-              <span className="block sm:hidden">Mesas</span>
-              <span className="hidden sm:block">🪑 Mesas</span>
-            </span>
+            <Table className="w-4 h-4" />
+            <span>Mesas</span>
           </TabsTrigger>
           <TabsTrigger 
             value="comandas" 
-            className="group data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500/40 data-[state=active]:to-yellow-500/30 data-[state=active]:text-amber-300 data-[state=active]:shadow-xl data-[state=active]:border-2 data-[state=active]:border-amber-400/60 data-[state=active]:scale-105 text-slate-300 hover:text-amber-300 hover:bg-amber-500/10 transition-all duration-300 rounded-xl font-bold text-xs sm:text-sm py-3 sm:py-4 px-2 sm:px-4 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 min-h-[60px] sm:min-h-[50px]"
+            className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 data-[state=active]:border-amber-500/40 text-slate-300 hover:text-amber-300 transition-all duration-200 rounded-md font-medium text-sm flex items-center justify-center gap-2 h-10"
           >
-            <Clock className="w-5 h-5 sm:w-4 sm:h-4 group-data-[state=active]:text-amber-300 transition-colors" />
-            <span className="text-center leading-tight">
-              <span className="block sm:hidden">Comandas</span>
-              <span className="hidden sm:block">⏰ Comandas</span>
-            </span>
+            <Clock className="w-4 h-4" />
+            <span>Comandas</span>
           </TabsTrigger>
         </TabsList>
 
