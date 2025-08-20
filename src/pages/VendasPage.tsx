@@ -349,11 +349,23 @@ export default function VendasPageSimple() {
 
       // Atualizar estoque e movimentações em lote (mais rápido)
       const updatePromises = carrinho.map(async (item) => {
+        // Buscar estoque atual do produto antes de atualizar
+        const { data: produtoAtual, error: produtoError } = await supabase
+          .from("produtos")
+          .select("estoque_atual")
+          .eq("id", item.produto.id)
+          .single()
+
+        if (produtoError) throw produtoError
+
+        // Calcular novo estoque (não pode ser negativo)
+        const novoEstoque = Math.max(0, produtoAtual.estoque_atual - item.quantidade)
+
         // Atualizar estoque
         const estoquePromise = supabase
           .from("produtos")
           .update({
-            estoque_atual: item.produto.estoque_atual - item.quantidade
+            estoque_atual: novoEstoque
           })
           .eq("id", item.produto.id)
 
@@ -759,10 +771,22 @@ export default function VendasPageSimple() {
 
       // Atualizar estoque dos produtos
       for (const item of comanda.itens) {
+        // Buscar estoque atual do produto antes de atualizar
+        const { data: produtoAtual, error: produtoError } = await supabase
+          .from("produtos")
+          .select("estoque_atual")
+          .eq("id", item.produto_id)
+          .single()
+
+        if (produtoError) throw produtoError
+
+        // Calcular novo estoque (não pode ser negativo)
+        const novoEstoque = Math.max(0, produtoAtual.estoque_atual - item.quantidade)
+
         const { error: estoqueError } = await supabase
           .from("produtos")
           .update({
-            estoque_atual: item.produto.estoque_atual - item.quantidade
+            estoque_atual: novoEstoque
           })
           .eq("id", item.produto_id)
 
