@@ -44,10 +44,10 @@ export function usePermissions() {
           em_periodo_teste,
           data_fim_teste,
           data_vencimento,
-          planos (
+          planos!inner (
             nome,
-            plano_funcionalidades (
-              funcionalidades (
+            plano_funcionalidades!inner (
+              funcionalidades!inner (
                 nome,
                 descricao,
                 categoria
@@ -74,6 +74,8 @@ export function usePermissions() {
       const funcionalidadesPermitidas = plano?.plano_funcionalidades?.flatMap(
         (pf: any) => pf.funcionalidades?.map((f: any) => f.nome) || []
       ) || []
+
+
 
       // Criar lista de permissões
       const permissoesMapeadas: PermissaoFuncionalidade[] = todasFuncionalidades.map(func => ({
@@ -112,8 +114,18 @@ export function usePermissions() {
     }
   }
 
-  const temPermissao = (funcionalidade: string): boolean => {
-    return permissoes.find(p => p.nome === funcionalidade)?.permitida || false
+  const temPermissao = (funcionalidade: string | string[]): boolean => {
+    if (Array.isArray(funcionalidade)) {
+      // Se é array, verifica se tem pelo menos uma das permissões
+      return funcionalidade.some(f => {
+        const permissao = permissoes.find(p => p.nome === f)
+        return permissao?.permitida || false
+      })
+    } else {
+      // Se é string, verifica apenas uma permissão
+      const permissao = permissoes.find(p => p.nome === funcionalidade)
+      return permissao?.permitida || false
+    }
   }
 
   const getPermissoesPorCategoria = (categoria: string): PermissaoFuncionalidade[] => {

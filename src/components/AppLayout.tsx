@@ -21,11 +21,11 @@ import { MobileBottomNav } from "./mobile-bottom-nav"
 import { PlanoStatus } from "./PlanoStatus"
 
 const navigation = [
-  { name: "Vendas", href: "/vendas", icon: ShoppingCart, permissao: "vendas_basicas" },
-  { name: "Estoque", href: "/estoque", icon: Package, permissao: "estoque_basico" },
-  { name: "Fluxo", href: "/fluxo", icon: ArrowUpDown, permissao: "vendas_basicas" },
-  { name: "Relatórios", href: "/relatorios", icon: BarChart3, permissao: "relatorios_basicos" },
-  { name: "Configurações", href: "/configuracoes", icon: Settings, permissao: null },
+  { name: "Vendas", href: "/app/vendas", icon: ShoppingCart, permissao: "vendas_basicas" },
+  { name: "Estoque", href: "/app/estoque", icon: Package, permissao: ["estoque_basico", "estoque_completo"] },
+  { name: "Fluxo", href: "/app/fluxo", icon: ArrowUpDown, permissao: "vendas_basicas" },
+  { name: "Relatórios", href: "/app/relatorios", icon: BarChart3, permissao: ["relatorios_basicos", "relatorios_avancados"] },
+  { name: "Configurações", href: "/app/configuracoes", icon: Settings, permissao: null },
 ]
 
 export default function AppLayout() {
@@ -105,7 +105,6 @@ export default function AppLayout() {
                     <ul role="list" className={cn(sidebarCollapsed ? "space-y-3 px-1" : "-mx-2 space-y-1")}>
                       {navigation.map((item) => {
                         const isActive = location.pathname === item.href
-                        const temAcesso = !item.permissao || temPermissao(item.permissao)
                         
                         return (
                           <li key={item.name}>
@@ -118,25 +117,14 @@ export default function AppLayout() {
                                   : "w-full justify-start gap-x-3 p-3",
                                 isActive
                                   ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 text-amber-400 border border-amber-500/30 shadow-lg"
-                                  : temAcesso 
-                                    ? "text-slate-300 hover:text-amber-400 hover:bg-slate-800/70 hover:border hover:border-amber-500/20"
-                                    : "text-slate-500 hover:text-slate-400 cursor-not-allowed opacity-60"
+                                  : "text-slate-300 hover:text-amber-400 hover:bg-slate-800/70 hover:border hover:border-amber-500/20"
                               )}
-                              onClick={() => {
-                                if (temAcesso) {
-                                  navigate(item.href)
-                                } else {
-                                  navigate('/planos')
-                                }
-                              }}
+                              onClick={() => navigate(item.href)}
                               title={sidebarCollapsed ? item.name : undefined}
                             >
                               <item.icon className={cn("shrink-0", sidebarCollapsed ? "h-6 w-6" : "h-5 w-5")} />
                               {!sidebarCollapsed && (
-                                <span className="flex items-center space-x-2">
-                                  <span>{item.name}</span>
-                                  {!temAcesso && <Lock className="w-4 h-4" />}
-                                </span>
+                                <span>{item.name}</span>
                               )}
                             </Button>
                           </li>
@@ -172,7 +160,7 @@ export default function AppLayout() {
                         </div>
                         <DropdownMenuSeparator className="bg-slate-700" />
                         <DropdownMenuItem 
-                          onClick={() => navigate('/configuracoes')}
+                          onClick={() => navigate('/app/configuracoes')}
                           className="text-slate-200 focus:bg-blue-500/20 focus:text-blue-400 cursor-pointer"
                         >
                           <Settings className="w-4 h-4 mr-2" />
@@ -260,7 +248,7 @@ export default function AppLayout() {
               </div>
               <DropdownMenuSeparator className="bg-slate-700" />
               <DropdownMenuItem 
-                onClick={() => navigate('/configuracoes')}
+                onClick={() => navigate('/app/configuracoes')}
                 className="text-slate-200 focus:bg-blue-500/20 focus:text-blue-400 cursor-pointer"
               >
                 <Settings className="w-4 h-4 mr-2" />

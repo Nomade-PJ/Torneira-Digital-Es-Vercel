@@ -35,6 +35,7 @@ import { supabase } from "../lib/supabase"
 import { useAuthContext } from "../components/providers/auth-provider"
 import { BarcodeScanner } from "../components/barcode-scanner"
 import { useToast } from "../components/ui/use-toast"
+import { PermissionGate } from "../components/PermissionGate"
 
 interface Produto {
   id: string
@@ -423,13 +424,14 @@ export default function FluxoPage() {
             Controle completo de entradas e saídas do estoque
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="w-full md:w-auto bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-900 font-semibold">
-              <Plus className="w-4 h-4 mr-2" />
-              Nova Movimentação
-            </Button>
-          </DialogTrigger>
+        <PermissionGate funcionalidade="vendas_basicas">
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="w-full md:w-auto bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-900 font-semibold">
+                <Plus className="w-4 h-4 mr-2" />
+                Nova Movimentação
+              </Button>
+            </DialogTrigger>
           <DialogContent className="w-[95vw] max-w-4xl mx-auto bg-slate-900/98 backdrop-blur-md border-amber-500/30 shadow-2xl max-h-[95vh] overflow-y-auto">
             <DialogHeader className="pb-6">
               <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent">
@@ -633,6 +635,7 @@ export default function FluxoPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </PermissionGate>
       </div>
 
       {/* Cards de Resumo */}

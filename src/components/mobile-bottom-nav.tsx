@@ -8,22 +8,22 @@ import { useAuthContext } from "./providers/auth-provider"
 const navItems = [
   {
     title: "Vendas",
-    href: "/vendas",
+    href: "/app/vendas",
     icon: ShoppingCart,
   },
   {
     title: "Estoque",
-    href: "/estoque",
+    href: "/app/estoque",
     icon: Package,
   },
   {
     title: "Fluxo",
-    href: "/fluxo",
+    href: "/app/fluxo",
     icon: Activity,
   },
   {
     title: "Relatórios",
-    href: "/relatorios",
+    href: "/app/relatorios",
     icon: BarChart3,
   },
 ]
