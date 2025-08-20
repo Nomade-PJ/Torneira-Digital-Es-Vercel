@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { supabase } from "../lib/supabase"
 import { useAuthContext } from "../components/providers/auth-provider"
 import { useToast } from "../components/ui/use-toast"
-import { thermalPrinter, type DadosImpressao } from "../lib/thermal-printer"
+import { thermalPrinter, type DadosImpressao, type ItemImpressao } from "../lib/thermal-printer"
 
 // 🔧 Interfaces (copiadas exatamente)
 interface Produto {
@@ -380,29 +380,42 @@ export default function VendasPageSimple() {
       // Executar todas as operações em paralelo
       await Promise.all(updatePromises)
 
-      // Imprimir recibo se configurado
+      // Imprimir recibo automaticamente
       try {
+        const itensImpressao: ItemImpressao[] = carrinho.map(item => ({
+          nome: item.produto.nome,
+          quantidade: item.quantidade,
+          preco: item.produto.preco_venda,
+          total: item.quantidade * item.produto.preco_venda,
+          observacoes: item.observacoes
+        }))
+
         const dadosImpressao: DadosImpressao = {
           tipo: 'venda_direta',
           numeroVenda: numeroVenda,
-          nomeEstabelecimento: user?.user_metadata?.nome_estabelecimento || "Estabelecimento",
-          itens: carrinho.map(item => ({
-            nome: item.produto.nome,
-            quantidade: item.quantidade,
-            preco: item.produto.preco_venda,
-            total: item.quantidade * item.produto.preco_venda
-          })),
+          nomeEstabelecimento: user?.user_metadata?.nome_estabelecimento || "Torneira Digital",
+          itens: itensImpressao,
           subtotal: subtotalCarrinho,
           desconto: descontoVendaDireta,
           total: totalCarrinho,
           formaPagamento: formaPagamento,
-          dataHora: new Date()
+          dataHora: new Date(),
+          observacoes: observacoes
         }
 
         await thermalPrinter.imprimirNota(dadosImpressao)
+        
+        toast({
+          title: "🖨️ Nota impressa",
+          description: "Recibo enviado para impressora térmica",
+        })
       } catch (printError) {
         console.warn("Erro na impressão:", printError)
-        // Não bloquear a venda por erro de impressão
+        toast({
+          title: "⚠️ Aviso",
+          description: "Venda finalizada, mas houve erro na impressão",
+          variant: "destructive",
+        })
       }
 
       toast({
@@ -771,10 +784,49 @@ export default function VendasPageSimple() {
           })
       }
 
-      toast({
-        title: "Comanda fechada",
-        description: `Comanda ${comanda.numero_comanda} fechada com sucesso!`,
-      })
+      // Imprimir nota da comanda automaticamente
+      try {
+        const itensImpressao: ItemImpressao[] = comanda.itens.map(item => ({
+          nome: item.produto.nome,
+          quantidade: item.quantidade,
+          preco: item.preco_unitario,
+          total: item.subtotal,
+          observacoes: item.observacoes
+        }))
+
+        const dadosImpressao: DadosImpressao = {
+          tipo: 'comanda',
+          numeroComanda: comanda.numero_comanda,
+          numeroMesa: comanda.mesa.numero_mesa,
+          nomeCliente: comanda.cliente_nome,
+          telefoneCliente: comanda.cliente_telefone,
+          nomeEstabelecimento: user?.user_metadata?.nome_estabelecimento || "Torneira Digital",
+          itens: itensImpressao,
+          subtotal: comanda.subtotal,
+          desconto: comanda.desconto,
+          total: comanda.total,
+          formaPagamento: formaPagamentoComanda,
+          dataHora: new Date()
+        }
+
+        await thermalPrinter.imprimirNota(dadosImpressao)
+        
+        toast({
+          title: "✅ Comanda fechada",
+          description: `Comanda ${comanda.numero_comanda} fechada e nota impressa!`,
+        })
+      } catch (printError) {
+        console.warn("Erro na impressão da comanda:", printError)
+        toast({
+          title: "✅ Comanda fechada",
+          description: `Comanda ${comanda.numero_comanda} fechada com sucesso!`,
+        })
+        toast({
+          title: "⚠️ Aviso",
+          description: "Houve erro na impressão da nota",
+          variant: "destructive",
+        })
+      }
 
       setIsDetalhesComandaOpen(false)
       setComandaSelecionada(null)
@@ -1688,135 +1740,21 @@ export default function VendasPageSimple() {
 
       {/* Dialog de Detalhes da Comanda */}
       <Dialog open={isDetalhesComandaOpen} onOpenChange={setIsDetalhesComandaOpen}>
-        <DialogContent 
-          className="bg-slate-900/95 backdrop-blur-sm border-amber-500/20 max-w-3xl max-h-[90vh] overflow-y-auto touch-none"
-          style={{ 
-            touchAction: 'none',
-            WebkitTouchCallout: 'none',
-            WebkitUserSelect: 'none',
-            userSelect: 'none'
-          }}
-        >
-          <DialogHeader>
-            <DialogTitle className="text-amber-400">
-              Detalhes da Comanda {comandaSelecionada?.numero_comanda}
+        <DialogContent className="bg-slate-900/98 backdrop-blur-md border-amber-500/30 max-w-4xl max-h-[95vh] overflow-y-auto shadow-2xl">
+          <DialogHeader className="pb-6">
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent">
+              📋 Detalhes da Comanda {comandaSelecionada?.numero_comanda}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-slate-300 text-base">
               Mesa {comandaSelecionada?.mesa.numero_mesa}
               {comandaSelecionada?.cliente_nome && ` - ${comandaSelecionada.cliente_nome}`}
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4">
-            {/* Informações da Comanda */}
-            <div className="grid grid-cols-2 gap-4 p-4 bg-slate-800/50 rounded-lg">
-              <div>
-                <p className="text-sm text-slate-400">Abertura:</p>
-                <p className="font-medium text-slate-200">
-                  {comandaSelecionada && new Date(comandaSelecionada.data_abertura).toLocaleString('pt-BR')}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-400">Status:</p>
-                <Badge variant="outline" className="border-amber-500/50 text-amber-400">
-                  {comandaSelecionada?.status}
-                </Badge>
-              </div>
-            </div>
-
-            {/* Lista de Itens */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-slate-200">Itens da Comanda</h3>
-                <Button
-                  size="sm"
-                  onClick={() => setIsAdicionarItemComandaOpen(true)}
-                  className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-900"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Item
-                </Button>
-              </div>
-              
-              {comandaSelecionada?.itens && comandaSelecionada.itens.length > 0 ? (
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {comandaSelecionada.itens.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-3 border border-slate-600/50 rounded-lg bg-slate-800/40">
-                      <div className="flex-1">
-                        <p className="font-medium text-slate-200">{item.produto.nome}</p>
-                        <p className="text-sm text-slate-400">
-                          R$ {item.preco_unitario.toFixed(2)} × {item.quantidade}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-green-400">
-                          R$ {item.subtotal.toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 border border-slate-600/50 rounded-lg bg-slate-800/20">
-                  <p className="text-slate-400">Nenhum item na comanda</p>
-                  <p className="text-sm text-slate-500">Adicione produtos para começar</p>
-                </div>
-              )}
-            </div>
-
-            {/* Desconto */}
-            <div className="p-4 bg-slate-800/50 rounded-lg">
-              <Label htmlFor="desconto-comanda" className="text-sm font-medium text-slate-300">
-                💰 Desconto (R$)
-              </Label>
-              <Input
-                id="desconto-comanda"
-                type="number"
-                step="0.01"
-                min="0"
-                value={descontoComanda}
-                onChange={(e) => {
-                  const novoDesconto = parseFloat(e.target.value) || 0
-                  setDescontoComanda(novoDesconto)
-                  // Atualizar comanda selecionada com novo desconto
-                  if (comandaSelecionada) {
-                    const novoTotal = comandaSelecionada.subtotal - novoDesconto
-                    setComandaSelecionada({
-                      ...comandaSelecionada,
-                      desconto: novoDesconto,
-                      total: Math.max(0, novoTotal)
-                    })
-                  }
-                }}
-                className="mt-2 h-12 bg-slate-800/60 border-slate-600/50 focus:border-amber-500/50 focus:ring-amber-500/20 text-slate-100 font-medium"
-                placeholder="0.00"
-              />
-            </div>
-
-            {/* Totais */}
-            <div className="space-y-3 p-4 bg-gradient-to-r from-slate-800/60 to-slate-700/40 rounded-xl border border-slate-600/50">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-300 font-medium">Subtotal:</span>
-                <span className="text-slate-100 font-semibold">R$ {comandaSelecionada?.subtotal.toFixed(2) || '0.00'}</span>
-              </div>
-              {comandaSelecionada && descontoComanda > 0 && (
-                <div className="flex justify-between text-sm text-red-400">
-                  <span className="font-medium">Desconto:</span>
-                  <span className="font-semibold">- R$ {descontoComanda.toFixed(2)}</span>
-                </div>
-              )}
-              <Separator className="bg-slate-600/50" />
-              <div className="flex justify-between text-xl font-bold">
-                <span className="text-slate-100">💵 Total:</span>
-                <span className="text-green-400">R$ {((comandaSelecionada?.subtotal || 0) - descontoComanda).toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="space-y-4 pt-4">
-            {/* Forma de Pagamento */}
-            <div className="w-full space-y-3">
-              <Label className="text-sm font-medium text-slate-300">💳 Forma de Pagamento</Label>
+          <div className="space-y-6">
+            {/* Forma de Pagamento - Movida para o topo */}
+            <div className="p-4 bg-gradient-to-r from-amber-600/20 to-yellow-600/20 rounded-xl border border-amber-500/30">
+              <h3 className="text-lg font-semibold text-amber-400 mb-3">💳 Forma de Pagamento</h3>
               <Select 
                 value={formaPagamentoComanda} 
                 onValueChange={setFormaPagamentoComanda}
@@ -1850,26 +1788,131 @@ export default function VendasPageSimple() {
                   >
                     💳 Cartão de Crédito
                   </SelectItem>
-                  <SelectItem 
-                    value="transferencia" 
-                    className="text-slate-100 focus:bg-amber-500/20 focus:text-amber-400 cursor-pointer"
-                  >
-                    🏦 Transferência
-                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Informações da Comanda */}
+            <div className="grid grid-cols-2 gap-4 p-4 bg-slate-800/50 rounded-xl border border-slate-600/50">
+              <div>
+                <p className="text-sm text-slate-400 font-medium">📅 Abertura:</p>
+                <p className="font-semibold text-slate-200 mt-1">
+                  {comandaSelecionada && new Date(comandaSelecionada.data_abertura).toLocaleString('pt-BR')}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-slate-400 font-medium">🔄 Status:</p>
+                <Badge variant="outline" className="border-amber-500/50 text-amber-400 mt-1">
+                  {comandaSelecionada?.status}
+                </Badge>
+              </div>
+            </div>
+
+            {/* Lista de Itens */}
+            <div className="p-4 bg-gradient-to-r from-slate-800/60 to-slate-700/40 rounded-xl border border-slate-600/50">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-blue-400">📦 Itens da Comanda</h3>
+                <Button
+                  size="sm"
+                  onClick={() => setIsAdicionarItemComandaOpen(true)}
+                  className="bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 text-white font-semibold px-4 py-2 rounded-lg shadow-lg transition-all duration-200"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adicionar Item
+                </Button>
+              </div>
+              
+              {comandaSelecionada?.itens && comandaSelecionada.itens.length > 0 ? (
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {comandaSelecionada.itens.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between p-3 border border-slate-600/50 rounded-lg bg-slate-800/40">
+                      <div className="flex-1">
+                        <p className="font-medium text-slate-200">{item.produto.nome}</p>
+                        <p className="text-sm text-slate-400">
+                          R$ {item.preco_unitario.toFixed(2)} × {item.quantidade}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-green-400">
+                          R$ {item.subtotal.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 border border-slate-600/50 rounded-lg bg-slate-800/20">
+                  <p className="text-slate-400">Nenhum item na comanda</p>
+                  <p className="text-sm text-slate-500">Adicione produtos para começar</p>
+                </div>
+              )}
+            </div>
+
+            {/* Desconto */}
+            <div className="p-4 bg-gradient-to-r from-red-600/20 to-pink-600/20 rounded-xl border border-red-500/30">
+              <Label htmlFor="desconto-comanda" className="text-lg font-semibold text-red-400 mb-3 block">
+                💰 Desconto (R$)
+              </Label>
+              <Input
+                id="desconto-comanda"
+                type="number"
+                step="0.01"
+                min="0"
+                value={descontoComanda}
+                onChange={(e) => {
+                  const novoDesconto = parseFloat(e.target.value) || 0
+                  setDescontoComanda(novoDesconto)
+                  // Atualizar comanda selecionada com novo desconto
+                  if (comandaSelecionada) {
+                    const novoTotal = comandaSelecionada.subtotal - novoDesconto
+                    setComandaSelecionada({
+                      ...comandaSelecionada,
+                      desconto: novoDesconto,
+                      total: Math.max(0, novoTotal)
+                    })
+                  }
+                }}
+                className="h-12 bg-slate-800/60 border-slate-600/50 focus:border-red-500/50 focus:ring-red-500/20 text-slate-100 font-medium"
+                placeholder="0.00"
+              />
+            </div>
+
+            {/* Totais */}
+            <div className="p-6 bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-xl border border-green-500/30">
+              <h3 className="text-lg font-semibold text-green-400 mb-4">💰 Resumo Financeiro</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between text-base">
+                  <span className="text-slate-300 font-medium">📊 Subtotal:</span>
+                  <span className="text-slate-100 font-semibold">R$ {comandaSelecionada?.subtotal.toFixed(2) || '0.00'}</span>
+                </div>
+                {comandaSelecionada && descontoComanda > 0 && (
+                  <div className="flex justify-between text-base text-red-400">
+                    <span className="font-medium">💸 Desconto:</span>
+                    <span className="font-semibold">- R$ {descontoComanda.toFixed(2)}</span>
+                  </div>
+                )}
+                <Separator className="bg-slate-600/50" />
+                <div className="flex justify-between text-2xl font-bold">
+                  <span className="text-green-400">💵 Total:</span>
+                  <span className="text-green-400">R$ {((comandaSelecionada?.subtotal || 0) - descontoComanda).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-4 pt-6 sticky bottom-0 bg-slate-900/98 backdrop-blur-md border-t border-slate-700/50">
             
             {/* Botões de Ação */}
-            <div className="flex space-x-3 w-full">
+            <div className="flex gap-4 w-full">
               <Button 
                 variant="outline" 
-                className="flex-1 h-12 border-slate-600/50 text-slate-300 hover:bg-slate-700/50 font-medium" 
+                className="flex-1 h-14 border-slate-600/50 text-slate-300 hover:bg-slate-700/50 font-semibold text-base rounded-xl" 
                 onClick={() => {
                   setIsDetalhesComandaOpen(false)
                   setDescontoComanda(0)
                 }}
               >
+                <X className="w-5 h-5 mr-2" />
                 ❌ Cancelar
               </Button>
               <Button
@@ -1885,7 +1928,7 @@ export default function VendasPageSimple() {
                     fecharComanda(comandaAtualizada, formaPagamentoComanda)
                   }
                 }}
-                className="flex-1 h-12 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold shadow-lg transition-all duration-200 hover:shadow-xl"
+                className="flex-1 h-14 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold text-base shadow-lg transition-all duration-200 hover:shadow-xl rounded-xl"
                 disabled={!comandaSelecionada || !comandaSelecionada.itens || comandaSelecionada.itens.length === 0}
               >
                 <Check className="w-5 h-5 mr-2" />

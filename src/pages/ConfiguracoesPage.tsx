@@ -23,6 +23,7 @@ import {
 import { supabase } from "../lib/supabase"
 import { useAuthContext } from "../components/providers/auth-provider"
 import { useToast } from "../components/ui/use-toast"
+import { notificationService } from "../lib/notifications"
 
 interface Configuracao {
   id: string
@@ -346,6 +347,35 @@ export default function ConfiguracoesPage() {
     }
   }
 
+
+
+  // Executar backup manual
+  const executarBackupManual = async () => {
+    if (!user?.id) return
+
+    try {
+      setSaving(true)
+      const sucesso = await notificationService.executarBackupAutomatico(user.id)
+      
+      if (sucesso) {
+        toast({
+          title: "✅ Backup realizado",
+          description: "Backup manual executado com sucesso",
+        })
+      } else {
+        throw new Error('Falha no backup')
+      }
+    } catch (error) {
+      toast({
+        title: "❌ Erro",
+        description: "Erro ao executar backup manual",
+        variant: "destructive",
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="space-y-4 md:space-y-6 p-2 md:p-0">
       {/* Header */}
@@ -462,6 +492,7 @@ export default function ConfiguracoesPage() {
               <Switch
                 checked={formData.notificacao_estoque_baixo}
                 onCheckedChange={(checked) => setFormData({ ...formData, notificacao_estoque_baixo: checked })}
+                className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-600"
               />
             </div>
             <Separator className="bg-slate-700" />
@@ -473,6 +504,7 @@ export default function ConfiguracoesPage() {
               <Switch
                 checked={formData.notificacao_email}
                 onCheckedChange={(checked) => setFormData({ ...formData, notificacao_email: checked })}
+                className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-600"
               />
             </div>
           </CardContent>
@@ -547,24 +579,49 @@ export default function ConfiguracoesPage() {
               <Switch
                 checked={formData.backup_automatico}
                 onCheckedChange={(checked) => setFormData({ ...formData, backup_automatico: checked })}
+                className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-600"
               />
             </div>
             <Separator className="bg-slate-700" />
-            <div className="flex flex-col md:flex-row gap-3">
-              <Button
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold h-12 px-6 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
-                onClick={handleExportData}
-              >
-                <Download className="w-5 h-5 mr-2" />
-                📥 Exportar Dados
-              </Button>
-              <Button
-                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold h-12 px-6 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
-                onClick={handleImportData}
-              >
-                <Upload className="w-5 h-5 mr-2" />
-                📤 Importar Dados
-              </Button>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold h-12 px-6 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
+                  onClick={handleExportData}
+                  disabled={saving}
+                >
+                  <Download className="w-5 h-5 mr-2" />
+                  📥 Exportar Dados
+                </Button>
+                <Button
+                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold h-12 px-6 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
+                  onClick={handleImportData}
+                  disabled={saving}
+                >
+                  <Upload className="w-5 h-5 mr-2" />
+                  📤 Importar Dados
+                </Button>
+              </div>
+              
+              <div className="flex justify-center">
+                <Button
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold h-12 px-8 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl min-w-[200px]"
+                  onClick={executarBackupManual}
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      🔄 Executando...
+                    </>
+                  ) : (
+                    <>
+                      <Database className="w-5 h-5 mr-2" />
+                      💾 Backup Manual
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
             <div className="p-4 rounded-xl bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-500/30 shadow-lg">
               <div className="flex items-center space-x-3">
