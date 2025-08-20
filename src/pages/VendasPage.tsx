@@ -897,80 +897,89 @@ export default function VendasPageSimple() {
         </div>
       </div>
 
-      {/* Cards de Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-amber-500/20 bg-gradient-to-br from-slate-900 to-slate-800">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-300">Vendas Hoje</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-amber-400" />
+      {/* Cards de Resumo - Mobile Optimized */}
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="border-amber-500/20 bg-gradient-to-br from-slate-900 to-slate-800 hover:border-amber-500/40 transition-all duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 sm:px-4 pt-3 sm:pt-4">
+            <CardTitle className="text-xs sm:text-sm font-medium text-slate-300 leading-tight">Vendas Hoje</CardTitle>
+            <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 text-amber-400 flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-400">{estatisticas.vendasHoje}</div>
-            <p className="text-xs text-muted-foreground">vendas realizadas hoje</p>
+          <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
+            <div className="text-lg sm:text-2xl font-bold text-amber-400">{estatisticas.vendasHoje}</div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight">vendas hoje</p>
           </CardContent>
         </Card>
 
-        <Card className="border-green-500/20 bg-gradient-to-br from-slate-900 to-slate-800">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-300">Receita Hoje</CardTitle>
-            <CreditCard className="h-4 w-4 text-green-400" />
+        <Card className="border-green-500/20 bg-gradient-to-br from-slate-900 to-slate-800 hover:border-green-500/40 transition-all duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 sm:px-4 pt-3 sm:pt-4">
+            <CardTitle className="text-xs sm:text-sm font-medium text-slate-300 leading-tight">Receita Hoje</CardTitle>
+            <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 text-green-400 flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-400">
+          <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
+            <div className="text-lg sm:text-2xl font-bold text-green-400">
               R$ {estatisticas.receitaHoje.toFixed(2)}
             </div>
-            <p className="text-xs text-muted-foreground">faturamento do dia</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight">faturamento hoje</p>
           </CardContent>
         </Card>
 
-        <Card className="border-blue-500/20 bg-gradient-to-br from-slate-900 to-slate-800">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-300">Total Vendas</CardTitle>
-            <Receipt className="h-4 w-4 text-blue-400" />
+        <Card className="border-blue-500/20 bg-gradient-to-br from-slate-900 to-slate-800 hover:border-blue-500/40 transition-all duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 sm:px-4 pt-3 sm:pt-4">
+            <CardTitle className="text-xs sm:text-sm font-medium text-slate-300 leading-tight">Total Vendas</CardTitle>
+            <Receipt className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400 flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-400">{estatisticas.totalVendas}</div>
-            <p className="text-xs text-muted-foreground">vendas realizadas</p>
+          <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
+            <div className="text-lg sm:text-2xl font-bold text-blue-400">{estatisticas.totalVendas}</div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight">vendas total</p>
           </CardContent>
         </Card>
 
-        <Card className="border-purple-500/20 bg-gradient-to-br from-slate-900 to-slate-800">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-300">Receita Total</CardTitle>
-            <CreditCard className="h-4 w-4 text-purple-400" />
+        <Card className="border-purple-500/20 bg-gradient-to-br from-slate-900 to-slate-800 hover:border-purple-500/40 transition-all duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 sm:px-4 pt-3 sm:pt-4">
+            <CardTitle className="text-xs sm:text-sm font-medium text-slate-300 leading-tight">Receita Total</CardTitle>
+            <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 text-purple-400 flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-400">
+          <CardContent className="px-3 sm:px-4 pb-3 sm:pb-4">
+            <div className="text-lg sm:text-2xl font-bold text-purple-400">
               R$ {estatisticas.receitaTotal.toFixed(2)}
             </div>
-            <p className="text-xs text-muted-foreground">faturamento total</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight">faturamento total</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Tabs Navigation */}
+      {/* Tabs Navigation - Mobile Optimized */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-gradient-to-r from-slate-800/80 to-slate-700/60 border border-amber-500/30 rounded-xl shadow-lg">
+        <TabsList className="grid w-full grid-cols-3 bg-gradient-to-r from-slate-900/95 to-slate-800/90 border-2 border-amber-500/40 rounded-2xl shadow-2xl p-1 backdrop-blur-sm">
           <TabsTrigger 
             value="vendas" 
-            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500/30 data-[state=active]:to-yellow-500/20 data-[state=active]:text-amber-400 data-[state=active]:shadow-lg data-[state=active]:border data-[state=active]:border-amber-500/40 text-slate-300 hover:text-amber-300 transition-all duration-200 rounded-lg font-semibold"
+            className="group data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500/40 data-[state=active]:to-yellow-500/30 data-[state=active]:text-amber-300 data-[state=active]:shadow-xl data-[state=active]:border-2 data-[state=active]:border-amber-400/60 data-[state=active]:scale-105 text-slate-300 hover:text-amber-300 hover:bg-amber-500/10 transition-all duration-300 rounded-xl font-bold text-xs sm:text-sm py-3 sm:py-4 px-2 sm:px-4 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 min-h-[60px] sm:min-h-[50px]"
           >
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            🛒 Venda Direta
+            <ShoppingCart className="w-5 h-5 sm:w-4 sm:h-4 group-data-[state=active]:text-amber-300 transition-colors" />
+            <span className="text-center leading-tight">
+              <span className="block sm:hidden">Venda</span>
+              <span className="hidden sm:block">🛒 Venda Direta</span>
+            </span>
           </TabsTrigger>
           <TabsTrigger 
             value="mesas" 
-            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500/30 data-[state=active]:to-yellow-500/20 data-[state=active]:text-amber-400 data-[state=active]:shadow-lg data-[state=active]:border data-[state=active]:border-amber-500/40 text-slate-300 hover:text-amber-300 transition-all duration-200 rounded-lg font-semibold"
+            className="group data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500/40 data-[state=active]:to-yellow-500/30 data-[state=active]:text-amber-300 data-[state=active]:shadow-xl data-[state=active]:border-2 data-[state=active]:border-amber-400/60 data-[state=active]:scale-105 text-slate-300 hover:text-amber-300 hover:bg-amber-500/10 transition-all duration-300 rounded-xl font-bold text-xs sm:text-sm py-3 sm:py-4 px-2 sm:px-4 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 min-h-[60px] sm:min-h-[50px]"
           >
-            <Table className="w-4 h-4 mr-2" />
-            🪑 Mesas
+            <Table className="w-5 h-5 sm:w-4 sm:h-4 group-data-[state=active]:text-amber-300 transition-colors" />
+            <span className="text-center leading-tight">
+              <span className="block sm:hidden">Mesas</span>
+              <span className="hidden sm:block">🪑 Mesas</span>
+            </span>
           </TabsTrigger>
           <TabsTrigger 
             value="comandas" 
-            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500/30 data-[state=active]:to-yellow-500/20 data-[state=active]:text-amber-400 data-[state=active]:shadow-lg data-[state=active]:border data-[state=active]:border-amber-500/40 text-slate-300 hover:text-amber-300 transition-all duration-200 rounded-lg font-semibold"
+            className="group data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500/40 data-[state=active]:to-yellow-500/30 data-[state=active]:text-amber-300 data-[state=active]:shadow-xl data-[state=active]:border-2 data-[state=active]:border-amber-400/60 data-[state=active]:scale-105 text-slate-300 hover:text-amber-300 hover:bg-amber-500/10 transition-all duration-300 rounded-xl font-bold text-xs sm:text-sm py-3 sm:py-4 px-2 sm:px-4 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 min-h-[60px] sm:min-h-[50px]"
           >
-            <Clock className="w-4 h-4 mr-2" />
-            ⏰ Comandas
+            <Clock className="w-5 h-5 sm:w-4 sm:h-4 group-data-[state=active]:text-amber-300 transition-colors" />
+            <span className="text-center leading-tight">
+              <span className="block sm:hidden">Comandas</span>
+              <span className="hidden sm:block">⏰ Comandas</span>
+            </span>
           </TabsTrigger>
         </TabsList>
 
