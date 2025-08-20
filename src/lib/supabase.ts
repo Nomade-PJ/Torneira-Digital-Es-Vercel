@@ -28,7 +28,8 @@ const supabaseOptions = {
     persistSession: true,
     detectSessionInUrl: false,
     flowType: 'implicit' as const,
-    storageKey: 'torneira-digital-auth'
+    storageKey: 'torneira-digital-auth',
+    debug: import.meta.env.DEV // Debug apenas em desenvolvimento
   },
   global: {
     headers: {
