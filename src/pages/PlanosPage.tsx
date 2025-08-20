@@ -144,7 +144,7 @@ export default function PlanosPage() {
 
           <div className="mb-6">
             <Badge className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400 border-green-500/30 px-6 py-2 text-lg font-bold mb-6">
-              🎉 7 Dias Grátis para Testar
+              🎉 7 Dias Grátis no Plano Mensal
             </Badge>
           </div>
           
@@ -152,7 +152,7 @@ export default function PlanosPage() {
             Torneira Digital
           </h1>
           <p className="text-xl text-slate-300 mb-2">Escolha o plano ideal para seu estabelecimento</p>
-          <p className="text-slate-400">Teste grátis por 7 dias, depois continue com o plano escolhido</p>
+          <p className="text-slate-400">Plano Mensal inclui 7 dias grátis • Demais planos iniciam imediatamente</p>
         </div>
 
         {error && (
@@ -282,14 +282,14 @@ export default function PlanosPage() {
                 <Clock className="w-6 h-6 text-slate-900" />
               </div>
               <h3 className="text-2xl font-bold text-green-400">
-                7 Dias Grátis para Testar
+                7 Dias Grátis no Plano Mensal
               </h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-300 mb-6">
               <div className="flex items-center space-x-2">
                 <Check className="w-5 h-5 text-green-400" />
-                <span>Acesso completo a todas as funcionalidades</span>
+                <span>Acesso a todas as funcionalidades básicas</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Check className="w-5 h-5 text-green-400" />
@@ -297,7 +297,7 @@ export default function PlanosPage() {
               </div>
               <div className="flex items-center space-x-2">
                 <Check className="w-5 h-5 text-green-400" />
-                <span>Suporte completo incluído</span>
+                <span>Suporte por email incluído</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Check className="w-5 h-5 text-green-400" />
@@ -306,7 +306,7 @@ export default function PlanosPage() {
             </div>
 
             <p className="text-slate-400 text-sm">
-              Após o período de teste, você será cobrado automaticamente conforme o plano escolhido.
+              <strong>Apenas o Plano Mensal</strong> inclui teste grátis. Planos Semestral e Anual iniciam imediatamente após o cadastro.
             </p>
           </div>
 
@@ -325,7 +325,7 @@ export default function PlanosPage() {
               </div>
               <div className="flex items-center space-x-2">
                 <Check className="w-5 h-5 text-green-400" />
-                <span>Gestão de comandas e mesas</span>
+                <span>Gestão básica de comandas</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Check className="w-5 h-5 text-green-400" />
@@ -351,7 +351,7 @@ export default function PlanosPage() {
           </div>
 
           <p className="text-slate-400 text-sm">
-            Ao escolher um plano, você será direcionado para criar sua conta e começar seu teste gratuito.
+            Ao escolher um plano, você será direcionado para criar sua conta. Plano Mensal inicia com teste grátis, demais planos iniciam imediatamente.
           </p>
         </div>
       </div>
