@@ -4,7 +4,7 @@ import { usePermissions } from '../hooks/usePermissions'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
-import { Lock, Crown, Zap } from 'lucide-react'
+import { Lock, Crown } from 'lucide-react'
 
 interface PermissionGateProps {
   funcionalidade: string

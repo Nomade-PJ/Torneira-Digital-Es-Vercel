@@ -70,8 +70,9 @@ export function usePermissions() {
       if (funcError) throw funcError
 
       // Funcionalidades permitidas para o plano do usuário
-      const funcionalidadesPermitidas = userData.planos?.plano_funcionalidades?.map(
-        (pf: any) => pf.funcionalidades.nome
+      const plano = Array.isArray(userData.planos) ? userData.planos[0] : userData.planos
+      const funcionalidadesPermitidas = plano?.plano_funcionalidades?.flatMap(
+        (pf: any) => pf.funcionalidades?.map((f: any) => f.nome) || []
       ) || []
 
       // Criar lista de permissões
@@ -95,12 +96,12 @@ export function usePermissions() {
 
       // Status do plano
       setStatusPlano({
-        nomeUsuario: userData.nome,
-        nomePlano: userData.planos?.nome || 'Nenhum',
+        nomeUsuario: userData.nome || '',
+        nomePlano: plano?.nome || 'Nenhum',
         statusAssinatura: userData.status_assinatura || '',
         emPeriodoTeste: userData.em_periodo_teste || false,
-        dataFimTeste: userData.data_fim_teste,
-        dataVencimento: userData.data_vencimento,
+        dataFimTeste: userData.data_fim_teste || null,
+        dataVencimento: userData.data_vencimento || null,
         diasRestantesTeste
       })
 
