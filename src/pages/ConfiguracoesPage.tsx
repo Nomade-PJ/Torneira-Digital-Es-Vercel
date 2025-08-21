@@ -75,10 +75,28 @@ export default function ConfiguracoesPage() {
 
       if (data) {
         setConfiguracoes(data)
+        
+        // Buscar número do WhatsApp se não houver telefone nas configurações
+        let telefoneAtual = data.telefone || ""
+        
+        if (!telefoneAtual) {
+          // Buscar da tabela de WhatsApp solicitações
+          const { data: whatsappData } = await supabase
+            .from('whatsapp_solicitacoes')
+            .select('whatsapp')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+          
+          if (whatsappData?.whatsapp) {
+            telefoneAtual = whatsappData.whatsapp
+          }
+        }
+        
         setFormData({
           nome_estabelecimento: data.nome_estabelecimento || "",
           email_contato: data.email_contato || "",
-          telefone: data.telefone || "",
+          telefone: telefoneAtual,
           notificacao_estoque_baixo: data.notificacao_estoque_baixo || false,
           notificacao_email: data.notificacao_email || false,
           estoque_minimo_padrao: data.estoque_minimo_padrao || 20,

@@ -6,6 +6,7 @@ import { Toaster } from './components/ui/toaster'
 // 🔧 Importação das páginas
 import LandingPage from './pages/LandingPage'
 import PlanosPage from './pages/PlanosPage'
+import WhatsAppPage from './pages/WhatsAppPage'
 import LoginPage from './pages/LoginPage'
 import VendasPage from './pages/VendasPage'
 import EstoquePage from './pages/EstoquePage'
@@ -25,6 +26,7 @@ function App() {
             {/* 🔧 Rotas públicas */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/planos" element={<PlanosPage />} />
+            <Route path="/whatsapp" element={<WhatsAppPage />} />
             <Route path="/login" element={<LoginPage />} />
             
             {/* 🔧 Rotas protegidas com layout */}

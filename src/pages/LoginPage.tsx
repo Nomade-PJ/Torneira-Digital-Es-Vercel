@@ -42,8 +42,7 @@ export default function LoginPage() {
     email: "",
     password: "",
     nomeEstabelecimento: "",
-    cnpjCpf: "",
-    telefone: ""
+    cnpjCpf: ""
   })
   
   const navigate = useNavigate()
@@ -52,7 +51,25 @@ export default function LoginPage() {
 
   // Verificar plano selecionado e redirecionar se usuário já estiver logado
   useEffect(() => {
-    // Verificar se há um plano selecionado na URL
+    // Verificar se há uma modalidade selecionada na URL (vindo do WhatsApp)
+    const modalidade = searchParams.get('modalidade')
+    const whatsappNumber = searchParams.get('whatsapp')
+    
+    if (modalidade) {
+      // Definir plano baseado na modalidade (sistema único com modalidades)
+      setPlanoSelecionado('unico')
+      // Mostrar formulário de registro por padrão se há modalidade selecionada
+      setIsLogin(false)
+      
+      // Se tiver número do WhatsApp, salvar para usar no cadastro
+      if (whatsappNumber) {
+        // Armazenar temporariamente para uso no cadastro
+        sessionStorage.setItem('whatsapp_number', whatsappNumber)
+        sessionStorage.setItem('selected_modalidade', modalidade)
+      }
+    }
+    
+    // Verificar se há um plano selecionado na URL (método antigo)
     const planoId = searchParams.get('plano')
     if (planoId) {
       setPlanoSelecionado(planoId)
@@ -130,8 +147,7 @@ export default function LoginPage() {
           email: formData.email,
           password: formData.password,
           nomeEstabelecimento: formData.nomeEstabelecimento,
-          cnpjCpf: formData.cnpjCpf.replace(/[^\d]/g, ""), // Remove formatação
-          telefone: formData.telefone
+          cnpjCpf: formData.cnpjCpf.replace(/[^\d]/g, "") // Remove formatação
         })
 
         if (!validation.success) {
@@ -157,7 +173,6 @@ export default function LoginPage() {
           password: formData.password,
           nomeEstabelecimento: formData.nomeEstabelecimento,
           cnpjCpf: formData.cnpjCpf.replace(/[^\d]/g, ""), // Remove formatação
-          telefone: formData.telefone,
           planoId: planoSelecionado
         })
 
@@ -398,22 +413,6 @@ export default function LoginPage() {
                   {validationErrors.cnpjCpf && (
                     <p className="text-red-400 text-sm mt-2">{validationErrors.cnpjCpf}</p>
                   )}
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="phone" className="text-slate-300 font-semibold text-base">
-                    Telefone (opcional)
-                  </Label>
-                  <div className="relative group">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-amber-400 transition-colors" />
-                    <Input
-                      id="phone"
-                      type="text"
-                      placeholder="(11) 99999-9999"
-                      value={formData.telefone}
-                      onChange={(e) => setFormData(prev => ({ ...prev, telefone: e.target.value }))}
-                      className="pl-12 h-14 bg-slate-800/60 border-slate-600/50 text-slate-100 placeholder:text-slate-500 focus:border-amber-500 focus:ring-amber-500/20 rounded-xl text-base font-medium transition-all duration-200"
-                    />
-                  </div>
                 </div>
               </>
             )}

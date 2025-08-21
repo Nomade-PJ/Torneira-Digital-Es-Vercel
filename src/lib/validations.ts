@@ -1,5 +1,84 @@
 import { z } from "zod"
 
+// Função para validar CPF
+function validateCPF(cpf: string): boolean {
+  const cleanCPF = cpf.replace(/[^\d]/g, "")
+  
+  // Verifica se tem 11 dígitos
+  if (cleanCPF.length !== 11) return false
+  
+  // Verifica se todos os dígitos são iguais
+  if (/^(\d)\1{10}$/.test(cleanCPF)) return false
+  
+  // Validação do primeiro dígito verificador
+  let sum = 0
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(cleanCPF.charAt(i)) * (10 - i)
+  }
+  let digit1 = 11 - (sum % 11)
+  if (digit1 > 9) digit1 = 0
+  
+  // Validação do segundo dígito verificador
+  sum = 0
+  for (let i = 0; i < 10; i++) {
+    sum += parseInt(cleanCPF.charAt(i)) * (11 - i)
+  }
+  let digit2 = 11 - (sum % 11)
+  if (digit2 > 9) digit2 = 0
+  
+  return (
+    parseInt(cleanCPF.charAt(9)) === digit1 &&
+    parseInt(cleanCPF.charAt(10)) === digit2
+  )
+}
+
+// Função para validar CNPJ
+function validateCNPJ(cnpj: string): boolean {
+  const cleanCNPJ = cnpj.replace(/[^\d]/g, "")
+  
+  // Verifica se tem 14 dígitos
+  if (cleanCNPJ.length !== 14) return false
+  
+  // Verifica se todos os dígitos são iguais
+  if (/^(\d)\1{13}$/.test(cleanCNPJ)) return false
+  
+  // Validação do primeiro dígito verificador
+  const weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+  let sum = 0
+  for (let i = 0; i < 12; i++) {
+    sum += parseInt(cleanCNPJ.charAt(i)) * weights1[i]
+  }
+  let digit1 = sum % 11
+  digit1 = digit1 < 2 ? 0 : 11 - digit1
+  
+  // Validação do segundo dígito verificador
+  const weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+  sum = 0
+  for (let i = 0; i < 13; i++) {
+    sum += parseInt(cleanCNPJ.charAt(i)) * weights2[i]
+  }
+  let digit2 = sum % 11
+  digit2 = digit2 < 2 ? 0 : 11 - digit2
+  
+  return (
+    parseInt(cleanCNPJ.charAt(12)) === digit1 &&
+    parseInt(cleanCNPJ.charAt(13)) === digit2
+  )
+}
+
+// Função para validar CPF ou CNPJ
+function validateCpfCnpj(value: string): boolean {
+  const cleanValue = value.replace(/[^\d]/g, "")
+  
+  if (cleanValue.length === 11) {
+    return validateCPF(cleanValue)
+  } else if (cleanValue.length === 14) {
+    return validateCNPJ(cleanValue)
+  }
+  
+  return false
+}
+
 
 
 
@@ -51,15 +130,19 @@ export const configuracoesSchema = z.object({
   backup_automatico: z.boolean(),
 })
 
-// Schema para registro - TEMPORÁRIO COM VALIDAÇÃO SIMPLIFICADA PARA DEBUG
+// Schema para registro com validação robusta de CPF/CNPJ
 export const registroSchema = z.object({
   email: z.string().email("Email inválido"),
   password: z.string()
-    .min(6, "Senha deve ter pelo menos 6 caracteres"), // Simplificado temporariamente
-  nomeEstabelecimento: z.string().min(2, "Nome do estabelecimento deve ter pelo menos 2 caracteres"),
+    .min(6, "Senha deve ter pelo menos 6 caracteres")
+    .regex(/[A-Za-z]/, "Senha deve conter pelo menos uma letra")
+    .regex(/\d/, "Senha deve conter pelo menos um número"),
+  nomeEstabelecimento: z.string()
+    .min(2, "Nome do estabelecimento deve ter pelo menos 2 caracteres")
+    .max(100, "Nome muito longo"),
   cnpjCpf: z.string()
-    .min(11, "CPF deve ter 11 dígitos ou CNPJ deve ter 14 dígitos"), // Removido validateCpfCnpj temporariamente
-  telefone: z.string().optional(),
+    .min(11, "CPF deve ter 11 dígitos ou CNPJ deve ter 14 dígitos")
+    .refine(validateCpfCnpj, "CPF ou CNPJ inválido")
 })
 
 // Schema para login

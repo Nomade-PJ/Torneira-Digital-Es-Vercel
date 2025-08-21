@@ -54,7 +54,7 @@ export const authService = {
           data: {
             nome_estabelecimento: nomeEstabelecimento,
             cnpj_cpf: cnpjCpf,
-            telefone: telefone,
+            telefone: null,
             plano_id: planoId
           }
         }
