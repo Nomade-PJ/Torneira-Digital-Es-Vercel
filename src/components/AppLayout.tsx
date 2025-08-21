@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Outlet, useLocation, useNavigate } from "react-router-dom"
 import { useAuthContext } from "./providers/auth-provider"
-import { usePermissions } from "../hooks/usePermissions"
+// usePermissions removido - todas as funcionalidades agora estão liberadas
 import { Button } from "./ui/button"
 import { 
   Beer, 
@@ -12,13 +12,12 @@ import {
   LogOut,
   Menu,
   X,
-  ShoppingCart,
-  Lock
+  ShoppingCart
 } from "lucide-react"
 import { cn } from "../lib/utils"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu"
 import { MobileBottomNav } from "./mobile-bottom-nav"
-import { PlanoStatus } from "./PlanoStatus"
+// PlanoStatus removido - agora aparece apenas em configurações
 
 const navigation = [
   { name: "Vendas", href: "/app/vendas", icon: ShoppingCart, permissao: "vendas_basicas" },
@@ -33,7 +32,7 @@ export default function AppLayout() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, signOut } = useAuthContext()
-  const { temPermissao } = usePermissions()
+  // temPermissao removido - todas as funcionalidades agora estão sempre liberadas
 
   const handleSignOut = async () => {
     try {
@@ -272,8 +271,7 @@ export default function AppLayout() {
         sidebarCollapsed ? "lg:pl-20" : "lg:pl-72"
       )}>
         <main className="py-6 lg:py-10 pb-20 md:pb-6">
-          <div className="px-4 sm:px-6 lg:px-8 space-y-6">
-            <PlanoStatus />
+          <div className="px-4 sm:px-6 lg:px-8">
             <Outlet />
           </div>
         </main>

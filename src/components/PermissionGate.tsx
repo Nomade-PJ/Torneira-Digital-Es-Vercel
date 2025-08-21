@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { usePermissions } from '../hooks/usePermissions'
+import { usePermissionsHierarchical } from '../hooks/usePermissionsHierarchical'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
@@ -13,9 +13,15 @@ interface PermissionGateProps {
 }
 
 export function PermissionGate({ funcionalidade, children, fallback }: PermissionGateProps) {
-  const { temPermissao } = usePermissions()
+  const { temPermissao, FUNCIONALIDADES_DISPONIVEIS } = usePermissionsHierarchical()
 
-  if (temPermissao(funcionalidade)) {
+  // Sistema hierárquico simples - verifica diretamente a funcionalidade
+  // Se a funcionalidade não existe no novo sistema, permite acesso (retrocompatibilidade)
+  const temAcesso = FUNCIONALIDADES_DISPONIVEIS[funcionalidade as keyof typeof FUNCIONALIDADES_DISPONIVEIS] 
+    ? temPermissao(funcionalidade)
+    : true
+
+  if (temAcesso) {
     return <>{children}</>
   }
 
@@ -28,9 +34,10 @@ interface FuncionalidadeBloqueadaProps {
 
 function FuncionalidadeBloqueada({ funcionalidade }: FuncionalidadeBloqueadaProps) {
   const navigate = useNavigate()
-  const { permissoes, statusPlano } = usePermissions()
+  const { statusPlano, FUNCIONALIDADES_DISPONIVEIS, getProximoNivel } = usePermissionsHierarchical()
   
-  const funcInfo = permissoes.find(p => p.nome === funcionalidade)
+  const funcInfo = FUNCIONALIDADES_DISPONIVEIS[funcionalidade as keyof typeof FUNCIONALIDADES_DISPONIVEIS]
+  const proximoNivel = getProximoNivel()
   
   const handleUpgrade = () => {
     navigate('/planos')
@@ -54,7 +61,7 @@ function FuncionalidadeBloqueada({ funcionalidade }: FuncionalidadeBloqueadaProp
           </CardTitle>
           
           <CardDescription className="text-slate-400">
-            {funcInfo?.descricao || 'Esta funcionalidade não está disponível no seu plano atual.'}
+            {funcInfo?.nome || 'Esta funcionalidade não está disponível no seu plano atual.'}
           </CardDescription>
         </CardHeader>
 
@@ -74,8 +81,17 @@ function FuncionalidadeBloqueada({ funcionalidade }: FuncionalidadeBloqueadaProp
 
           <div className="space-y-4">
             <p className="text-slate-300">
-              Para acessar esta funcionalidade, faça upgrade do seu plano.
+              {proximoNivel 
+                ? `Para acessar esta funcionalidade, faça upgrade para o plano ${proximoNivel.nome}.`
+                : 'Para acessar esta funcionalidade, faça upgrade do seu plano.'
+              }
             </p>
+            
+            {funcInfo && (
+              <div className="text-xs text-slate-500 bg-slate-800/30 p-2 rounded">
+                Disponível a partir do nível {funcInfo.nivel} ({Object.entries(FUNCIONALIDADES_DISPONIVEIS).find(([_, f]) => f.nivel === funcInfo.nivel)?.[0] || 'Superior'})
+              </div>
+            )}
             
             <Button
               onClick={handleUpgrade}

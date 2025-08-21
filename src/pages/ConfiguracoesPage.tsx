@@ -24,6 +24,7 @@ import { supabase } from "../lib/supabase"
 import { useAuthContext } from "../components/providers/auth-provider"
 import { useToast } from "../components/ui/use-toast"
 import { notificationService } from "../lib/notifications"
+import { PlanoStatus } from "../components/PlanoStatus"
 
 interface Configuracao {
   id: string
@@ -410,6 +411,11 @@ export default function ConfiguracoesPage() {
             {saving ? "💾 Salvando..." : "💾 Salvar Configurações"}
           </Button>
         </div>
+      </div>
+
+      {/* Status do Plano - Posicionado no topo das configurações */}
+      <div className="mb-6">
+        <PlanoStatus />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">

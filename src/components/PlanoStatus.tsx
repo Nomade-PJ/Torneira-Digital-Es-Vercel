@@ -1,4 +1,4 @@
-import { usePermissions } from '../hooks/usePermissions'
+import { usePermissionsHierarchical } from '../hooks/usePermissionsHierarchical'
 import { Card, CardContent } from './ui/card'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
@@ -6,8 +6,9 @@ import { Clock, Crown, AlertTriangle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 export function PlanoStatus() {
-  const { statusPlano, loading } = usePermissions()
+  const { statusPlano, loading, podeUpgrade, getProximoNivel } = usePermissionsHierarchical()
   const navigate = useNavigate()
+  const proximoNivel = getProximoNivel()
 
   if (loading || !statusPlano) return null
 
@@ -61,17 +62,17 @@ export function PlanoStatus() {
             </div>
           </div>
 
-          {(statusPlano.emPeriodoTeste && statusPlano.diasRestantesTeste !== null && statusPlano.diasRestantesTeste <= 3) || 
-           statusPlano.nomePlano === 'Mensal' ? (
+          {podeUpgrade() && (
             <Button
               size="sm"
               onClick={handleUpgrade}
               className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-900 font-semibold"
+              title={proximoNivel ? `Upgrade para ${proximoNivel.nome}` : 'Ver planos disponíveis'}
             >
               <Crown className="w-4 h-4 mr-1" />
-              Upgrade
+              {proximoNivel ? `→ ${proximoNivel.nome}` : 'Upgrade'}
             </Button>
-          ) : null}
+          )}
         </div>
       </CardContent>
     </Card>
