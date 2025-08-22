@@ -3,43 +3,68 @@ import { useNavigate } from "react-router-dom"
 import { Button } from "../components/ui/button"
 import { Card, CardContent } from "../components/ui/card"
 import { Badge } from "../components/ui/badge"
-import { Beer, Crown, Gift, Sparkles, Star, Zap, ArrowRight } from "lucide-react"
+import { Beer, Crown, Sparkles, Star, Zap, ArrowRight, CreditCard } from "lucide-react"
+import CheckoutAsaas from "../components/CheckoutAsaas"
+import { useToast } from "../components/ui/use-toast"
 
 export default function PlanosPage() {
   const [modalidadeSelecionada, setModalidadeSelecionada] = useState<'mensal' | 'semestral' | 'anual'>('mensal')
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const navigate = useNavigate()
+  const { toast } = useToast()
 
   // NOVA LÓGICA: Produto único com 3 modalidades de pagamento
   const modalidades = {
     mensal: {
-      nome: 'Mensal',
-      preco: 89.90,
-      precoTotal: undefined,
+      id: 'plano-mensal-torneira-digital',
+      nome: 'Plano Mensal',
+      preco_mensal: 89.90,
+      preco_total: 89.90,
+      duracao_meses: 1,
+      desconto_percentual: 0,
       economia: null,
       descricao: 'Pague mensalmente',
       temTeste: true
     },
     semestral: {
-      nome: 'Semestral',
-      preco: 79.90,
-      precoTotal: 479.40,
-      economia: '11% de desconto',
+      id: 'plano-semestral-torneira-digital',
+      nome: 'Plano Semestral',
+      preco_mensal: 79.90,
+      preco_total: 479.40,
+      duracao_meses: 6,
+      desconto_percentual: 11,
+      economia: `Economize R$ ${((89.90 * 6) - 479.40).toFixed(2)}`,
       descricao: 'Pague semestralmente e economize',
       temTeste: false
     },
     anual: {
-      nome: 'Anual',
-      preco: 69.90,
-      precoTotal: 839.40,
-      economia: '22% de desconto',
+      id: 'plano-anual-torneira-digital',
+      nome: 'Plano Anual',
+      preco_mensal: 69.90,
+      preco_total: 838.80,
+      duracao_meses: 12,
+      desconto_percentual: 22,
+      economia: `Economize R$ ${((89.90 * 12) - 838.80).toFixed(2)}`,
       descricao: 'Pague anualmente e economize ainda mais',
       temTeste: false
     }
   }
 
   const handleSelecionarModalidade = () => {
-    // Navegar para o WhatsApp com a modalidade selecionada
-    navigate(`/whatsapp?modalidade=${modalidadeSelecionada}`)
+    // NOVA LÓGICA: Sempre abrir checkout, mesmo sem login
+    // O checkout vai coletar dados pessoais e criar conta automaticamente
+    console.log('🛒 Abrindo checkout para:', modalidadeAtual.nome)
+    setIsCheckoutOpen(true)
+  }
+
+  const handlePaymentSuccess = () => {
+    toast({
+      title: "🎉 Pagamento Confirmado!",
+      description: `Sua conta foi criada! Faça login para acessar o sistema.`,
+    })
+    
+    // Redirecionar para login com mensagem de sucesso
+    navigate('/login?payment=success&plan=' + modalidadeAtual.nome)
   }
 
   const modalidadeAtual = modalidades[modalidadeSelecionada]
@@ -191,14 +216,14 @@ export default function PlanosPage() {
           >
             {modalidadeAtual.temTeste ? (
               <div className="flex items-center space-x-2">
-                <Gift className="w-5 h-5" />
-                <span>Começar Teste Grátis</span>
+                <CreditCard className="w-5 h-5" />
+                <span>Começar com {modalidadeAtual.nome}</span>
                 <ArrowRight className="w-5 h-5" />
               </div>
             ) : (
               <div className="flex items-center space-x-2">
-                <Crown className="w-5 h-5" />
-                <span>Começar</span>
+                <CreditCard className="w-5 h-5" />
+                <span>Assinar {modalidadeAtual.nome}</span>
                 <ArrowRight className="w-5 h-5" />
               </div>
             )}
@@ -216,6 +241,14 @@ export default function PlanosPage() {
           </p>
         </div>
       </div>
+
+      {/* Checkout Modal */}
+      <CheckoutAsaas 
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        plano={modalidadeAtual}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
     </div>
   )
 }
