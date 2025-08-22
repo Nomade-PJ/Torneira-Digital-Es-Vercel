@@ -352,38 +352,25 @@ export class WhatsAppService {
   // Enviar mensagem real via API do WhatsApp
   static async enviarMensagem(whatsapp: string, mensagem: string): Promise<boolean> {
     try {
-      console.log(`🚀 INICIANDO ENVIO PARA WHATSAPP: ${whatsapp}`)
-      
       // Para seu número específico, tentar envio real
       if (whatsapp === '98992022352' || whatsapp === '5598992022352') {
-        console.log('🎯 DETECTADO SEU NÚMERO - TENTANDO ENVIO REAL!')
-        
-        // Tentar envio via API real
-        const resultado = await WhatsAppAPI.enviarMensagem(mensagem)
-        
-        if (resultado.success) {
-          console.log('✅ SUCESSO:', resultado.message)
-        } else {
-          console.log('⚠️ FALHA NO ENVIO REAL:', resultado.error)
-          console.log('📋 INSTRUÇÕES PARA ATIVAR:')
-          console.log(WhatsAppAPI.obterInstrucoes())
+        try {
+          const resultado = await WhatsAppAPI.enviarMensagem(mensagem)
+          if (!resultado.success) {
+            console.warn('Falha no envio WhatsApp:', resultado.error)
+          }
+        } catch (error) {
+          console.error('Erro WhatsApp:', error)
         }
       } else {
         // Para outros números, apenas simular
-        console.log('🔄 Simulando envio para número:', whatsapp)
         await new Promise(resolve => setTimeout(resolve, 1500))
       }
-      
-      // Log da mensagem
-      console.log('📝 CONTEÚDO DA MENSAGEM:')
-      console.log('─'.repeat(50))
-      console.log(mensagem)
-      console.log('─'.repeat(50))
       
       // Marcar como enviada no banco
       await this.marcarMensagemEnviada(whatsapp)
       
-      console.log(`✅ Processo concluído para ${whatsapp}`)
+      // Processo concluído
       return true
       
     } catch (error) {

@@ -234,14 +234,11 @@ async function imprimirViaBrowser(conteudo: string): Promise<void> {
 
 async function simularImpressao(conteudo: string, dados: DadosImpressao): Promise<void> {
   return new Promise((resolve) => {
-    console.log('📄 Simulando impressão térmica...')
-    console.log('='.repeat(50))
-    console.log(conteudo)
-    console.log('='.repeat(50))
+    // Simulando impressão térmica
+    // Em produção, aqui seria enviado para impressora física
     
     // Simular tempo de impressão
     setTimeout(() => {
-      console.log(`✅ Impressão simulada concluída para ${dados.tipo}`)
       resolve()
     }, 1500)
   })
