@@ -232,7 +232,7 @@ async function imprimirViaBrowser(conteudo: string): Promise<void> {
   })
 }
 
-async function simularImpressao(conteudo: string, dados: DadosImpressao): Promise<void> {
+async function simularImpressao(_conteudo: string, _dados: DadosImpressao): Promise<void> {
   return new Promise((resolve) => {
     // Simulando impressão térmica
     // Em produção, aqui seria enviado para impressora física
