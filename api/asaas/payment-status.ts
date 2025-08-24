@@ -37,8 +37,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Payment ID is required' })
     }
 
-    const asaasApiKey = process.env.VITE_ASAAS_API_KEY
-    const asaasEnvironment = process.env.VITE_ASAAS_ENVIRONMENT || 'sandbox'
+    // Tentar diferentes formatos de variáveis de ambiente
+    const asaasApiKey = process.env.VITE_ASAAS_API_KEY || process.env.ASAAS_API_KEY
+    const asaasEnvironment = process.env.VITE_ASAAS_ENVIRONMENT || process.env.ASAAS_ENVIRONMENT || 'sandbox'
     
     if (!asaasApiKey) {
       console.error('❌ API Key do Asaas não configurada')
