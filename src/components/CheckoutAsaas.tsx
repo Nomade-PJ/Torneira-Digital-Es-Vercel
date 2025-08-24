@@ -337,9 +337,10 @@ export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess
           })
           
           // Mensagem de erro mais específica
-          const errorMessage = userError.message?.includes('RLS') 
+          const errorMsg = typeof userError === 'string' ? userError : (userError as any)?.message || 'Erro desconhecido'
+          const errorMessage = errorMsg.includes('RLS') 
             ? 'Erro de permissão no banco de dados. Contacte o suporte.'
-            : userError.message?.includes('duplicate') 
+            : errorMsg.includes('duplicate') 
             ? 'Este email já está cadastrado.'
             : 'Erro ao criar conta. Verifique sua conexão e tente novamente.'
             

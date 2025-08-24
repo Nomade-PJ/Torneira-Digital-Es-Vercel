@@ -128,14 +128,16 @@ class AsaasService {
     // API Key do ambiente configurado
     this.apiKey = import.meta.env.VITE_ASAAS_API_KEY || 'SUA_API_KEY_AQUI'
     
-    // Debug das configurações para produção
-    console.log('🔧 Asaas Config:', {
-      environment: this.environment,
-      baseURL: this.baseURL,
-      hasApiKey: !!this.apiKey && this.apiKey !== 'SUA_API_KEY_AQUI',
-      apiKeyLength: this.apiKey?.length,
-      apiKeyPrefix: this.apiKey?.substring(0, 20) + '...'
-    })
+    // Debug das configurações apenas em desenvolvimento
+    if (import.meta.env.DEV) {
+      console.log('🔧 Asaas Config:', {
+        environment: this.environment,
+        baseURL: this.baseURL,
+        hasApiKey: !!this.apiKey && this.apiKey !== 'SUA_API_KEY_AQUI',
+        apiKeyLength: this.apiKey?.length,
+        apiKeyPrefix: this.apiKey?.substring(0, 20) + '...'
+      })
+    }
   }
 
   // Headers padrão para as requisições
