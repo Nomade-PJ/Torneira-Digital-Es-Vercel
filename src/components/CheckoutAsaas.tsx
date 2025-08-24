@@ -57,6 +57,7 @@ interface FormData {
   validadeMM: string
   validadeAA: string
   cvv: string
+  parcelas?: number
 }
 
 interface PixData {
@@ -69,12 +70,13 @@ export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess
   const { user } = useAuthContext()
   const { toast } = useToast()
   
-  // Estados principais
-  const [step, setStep] = useState<'method' | 'form' | 'processing' | 'pix' | 'success' | 'error'>('method')
+  // Estados principais com linha do tempo
+  const [step, setStep] = useState<'method' | 'form' | 'card_data' | 'processing' | 'pix' | 'success' | 'error'>('method')
   const [processingMessage, setProcessingMessage] = useState('Processando...')
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'cartao_credito'>('pix')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [currentStepIndex, setCurrentStepIndex] = useState(0)
   
   // Dados do formulário (NOVA LÓGICA: Sempre vazio para novos usuários)
   const [formData, setFormData] = useState<FormData>({
@@ -100,6 +102,65 @@ export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess
   const [pixData, setPixData] = useState<PixData | null>(null)
   const [timeLeft, setTimeLeft] = useState<number>(0)
   const [paymentStatus, setPaymentStatus] = useState<'waiting' | 'checking' | 'confirmed'>('waiting')
+
+  // Definição dos passos da timeline - dinâmica baseada no método de pagamento
+  const getTimelineSteps = () => {
+    const baseSteps = [
+      { 
+        id: 'method',
+        title: 'Método', 
+        description: 'Escolher pagamento',
+        icon: '💳',
+        number: 1
+      },
+      { 
+        id: 'form',
+        title: 'Dados', 
+        description: 'Suas informações',
+        icon: '👤',
+        number: 2
+      }
+    ]
+    
+    // Terceira etapa muda baseada no método
+    if (paymentMethod === 'pix') {
+      baseSteps.push({
+        id: 'processing',
+        title: 'Gerando PIX',
+        description: 'QR Code e código',
+        icon: '📱',
+        number: 3
+      })
+    } else {
+      baseSteps.push({
+        id: 'card_data',
+        title: 'Cartão',
+        description: 'Dados do pagamento',
+        icon: '💳',
+        number: 3
+      })
+      baseSteps.push({
+        id: 'processing',
+        title: 'Processando',
+        description: 'Validando cartão',
+        icon: '⚡',
+        number: 4
+      })
+    }
+    
+    // Última etapa sempre é sucesso
+    baseSteps.push({
+      id: 'success',
+      title: 'Finalizado',
+      description: 'Pronto!',
+      icon: '✅',
+      number: paymentMethod === 'pix' ? 4 : 5
+    })
+    
+    return baseSteps
+  }
+  
+  const timelineSteps = getTimelineSteps()
 
   // Timer para PIX
   useEffect(() => {
@@ -441,6 +502,19 @@ export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess
     onClose()
   }
 
+  // Função para atualizar o índice da timeline baseado no step atual
+  const updateTimelineStep = (currentStep: string) => {
+    const stepIndex = timelineSteps.findIndex(s => s.id === currentStep)
+    if (stepIndex !== -1) {
+      setCurrentStepIndex(stepIndex)
+    }
+  }
+
+  // Atualizar timeline quando step mudar
+  useEffect(() => {
+    updateTimelineStep(step)
+  }, [step])
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -450,6 +524,91 @@ export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess
             <span>Checkout Seguro - {plano.nome}</span>
           </DialogTitle>
         </DialogHeader>
+
+        {/* 📋 TIMELINE SIMPLES E PROFISSIONAL */}
+        <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">
+              Progresso do Checkout
+            </h3>
+            <span className="text-sm text-gray-500">
+              {currentStepIndex + 1} de {timelineSteps.length}
+            </span>
+          </div>
+          
+          {/* Timeline Horizontal Simples */}
+          <div className="flex items-center justify-between">
+            {timelineSteps.map((timelineStep, index) => {
+              const isCompleted = index < currentStepIndex
+              const isActive = index === currentStepIndex
+              const isLast = index === timelineSteps.length - 1
+              
+              return (
+                <div key={timelineStep.id} className="flex items-center flex-1">
+                  {/* Círculo do Step */}
+                  <div className="flex flex-col items-center">
+                    <div 
+                      className={`
+                        w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-300
+                        ${isCompleted 
+                          ? 'bg-green-500 border-green-500 text-white' 
+                          : isActive
+                          ? 'bg-blue-500 border-blue-500 text-white'
+                          : 'bg-gray-100 border-gray-300 text-gray-400'
+                        }
+                      `}
+                    >
+                      {isCompleted ? '✓' : timelineStep.number}
+                    </div>
+                    
+                    {/* Título e descrição */}
+                    <div className="text-center mt-2">
+                      <p className={`text-xs font-medium ${
+                        isCompleted 
+                          ? 'text-green-700' 
+                          : isActive 
+                          ? 'text-blue-700'
+                          : 'text-gray-500'
+                      }`}>
+                        {timelineStep.title}
+                      </p>
+                      <p className={`text-xs ${
+                        isCompleted 
+                          ? 'text-green-600' 
+                          : isActive 
+                          ? 'text-blue-600'
+                          : 'text-gray-400'
+                      }`}>
+                        {timelineStep.description}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Linha conectora */}
+                  {!isLast && (
+                    <div className="flex-1 h-0.5 mx-4 bg-gray-200">
+                      <div 
+                        className={`h-full transition-all duration-500 ${
+                          isCompleted ? 'bg-green-500' : 'bg-gray-200'
+                        }`}
+                      />
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+          
+          {/* Barra de progresso */}
+          <div className="mt-4">
+            <div className="bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                style={{ width: `${(currentStepIndex / (timelineSteps.length - 1)) * 100}%` }}
+              />
+            </div>
+          </div>
+        </div>
 
         {/* Resumo do Plano */}
         <Card className="mb-6">
@@ -659,65 +818,18 @@ export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess
               </div>
             </div>
 
-            {/* Dados do Cartão (apenas se cartão selecionado) */}
-            {paymentMethod === 'cartao_credito' && (
-              <div className="border-t pt-6">
-                <h4 className="text-md font-semibold mb-4">Dados do Cartão</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
-                    <Label htmlFor="nomeCartao">Nome no Cartão *</Label>
-                    <Input
-                      id="nomeCartao"
-                      value={formData.nomeCartao}
-                      onChange={(e) => handleInputChange('nomeCartao', e.target.value.toUpperCase())}
-                      placeholder="NOME COMO NO CARTÃO"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label htmlFor="numeroCartao">Número do Cartão *</Label>
-                    <Input
-                      id="numeroCartao"
-                      value={formData.numeroCartao}
-                      onChange={(e) => handleInputChange('numeroCartao', e.target.value)}
-                      placeholder="0000 0000 0000 0000"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="validadeMM">Mês *</Label>
-                    <Input
-                      id="validadeMM"
-                      value={formData.validadeMM}
-                      onChange={(e) => handleInputChange('validadeMM', e.target.value)}
-                      placeholder="MM"
-                      maxLength={2}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="validadeAA">Ano *</Label>
-                    <Input
-                      id="validadeAA"
-                      value={formData.validadeAA}
-                      onChange={(e) => handleInputChange('validadeAA', e.target.value)}
-                      placeholder="AA"
-                      maxLength={2}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="cvv">CVV *</Label>
-                    <Input
-                      id="cvv"
-                      value={formData.cvv}
-                      onChange={(e) => handleInputChange('cvv', e.target.value)}
-                      placeholder="000"
-                      maxLength={4}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
+
 
             <Button 
-              onClick={processPayment}
+              onClick={() => {
+                // Se for PIX, vai direto para processamento
+                if (paymentMethod === 'pix') {
+                  processPayment()
+                } else {
+                  // Se for cartão, vai para a etapa de dados do cartão
+                  setStep('card_data')
+                }
+              }}
               disabled={loading}
               className="w-full h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-xl border-2 border-green-400/40 hover:border-green-300/60 transition-all duration-200 hover:shadow-2xl disabled:opacity-50 disabled:hover:scale-100"
             >
@@ -726,16 +838,157 @@ export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Processando...
                 </>
+              ) : paymentMethod === 'pix' ? (
+                <>
+                  Gerar PIX - {AsaasUtils.formatCurrency(plano.preco_total)} 📱
+                </>
               ) : (
                 <>
-                  Finalizar Pagamento - {AsaasUtils.formatCurrency(plano.preco_total)}
+                  Próximo: Dados do Cartão 🔒
                 </>
               )}
             </Button>
           </div>
         )}
 
-        {/* Step 3: Processamento */}
+        {/* Step 3: Dados do Cartão */}
+        {step === 'card_data' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                🔒 Dados do Cartão de Crédito
+              </h3>
+              <Button variant="outline" onClick={() => setStep('form')}>
+                ← Voltar
+              </Button>
+            </div>
+
+            {/* Campos específicos do cartão */}
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="numero_cartao" className="text-gray-700 font-medium">Número do Cartão</Label>
+                <Input
+                  id="numero_cartao"
+                  placeholder="1234 5678 9012 3456"
+                  value={formData.numeroCartao}
+                  onChange={(e) => {
+                    // Formatar número do cartão (adicionar espaços)
+                    let value = e.target.value.replace(/\s/g, '').replace(/\D/g, '')
+                    value = value.replace(/(.{4})/g, '$1 ').trim()
+                    if (value.length <= 19) { // 16 dígitos + 3 espaços
+                      setFormData({...formData, numeroCartao: value})
+                    }
+                  }}
+                  className="h-12 bg-white border border-gray-300 text-gray-900 placeholder:text-gray-500"
+                  maxLength={19}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="nome_cartao" className="text-gray-700 font-medium">Nome no Cartão</Label>
+                <Input
+                  id="nome_cartao"
+                  placeholder="NOME CONFORME IMPRESSO NO CARTÃO"
+                  value={formData.nomeCartao}
+                  onChange={(e) => setFormData({...formData, nomeCartao: e.target.value.toUpperCase()})}
+                  className="h-12 bg-white border border-gray-300 text-gray-900 placeholder:text-gray-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="validade" className="text-gray-700 font-medium">Validade</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      id="validadeMM"
+                      placeholder="MM"
+                      value={formData.validadeMM}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '')
+                        if (value.length <= 2 && parseInt(value) <= 12) {
+                          setFormData({...formData, validadeMM: value})
+                        }
+                      }}
+                      className="h-12 text-center bg-white border border-gray-300 text-gray-900 placeholder:text-gray-500"
+                      maxLength={2}
+                    />
+                    <Input
+                      id="validadeAA"
+                      placeholder="AA"
+                      value={formData.validadeAA}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '')
+                        if (value.length <= 2) {
+                          setFormData({...formData, validadeAA: value})
+                        }
+                      }}
+                      className="h-12 text-center bg-white border border-gray-300 text-gray-900 placeholder:text-gray-500"
+                      maxLength={2}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="cvv" className="text-gray-700 font-medium">CVV</Label>
+                  <Input
+                    id="cvv"
+                    placeholder="123"
+                    value={formData.cvv}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '')
+                      if (value.length <= 3) {
+                        setFormData({...formData, cvv: value})
+                      }
+                    }}
+                    className="h-12 text-center bg-white border border-gray-300 text-gray-900 placeholder:text-gray-500"
+                    maxLength={3}
+                  />
+                </div>
+              </div>
+
+              {/* Parcelamento */}
+              <div>
+                <Label htmlFor="parcelas" className="text-gray-700 font-medium">Parcelamento</Label>
+                <select
+                  id="parcelas"
+                  value={formData.parcelas || 1}
+                  onChange={(e) => setFormData({...formData, parcelas: parseInt(e.target.value)})}
+                  className="w-full h-12 px-3 bg-white border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                >
+                  <option value={1} className="text-gray-900 bg-white">1x de {AsaasUtils.formatCurrency(plano.preco_total)} (sem juros)</option>
+                  <option value={2} className="text-gray-900 bg-white">2x de {AsaasUtils.formatCurrency(plano.preco_total / 2)} (sem juros)</option>
+                  <option value={3} className="text-gray-900 bg-white">3x de {AsaasUtils.formatCurrency(plano.preco_total / 3)} (sem juros)</option>
+                  <option value={4} className="text-gray-900 bg-white">4x de {AsaasUtils.formatCurrency(plano.preco_total / 4)} (sem juros)</option>
+                  <option value={5} className="text-gray-900 bg-white">5x de {AsaasUtils.formatCurrency(plano.preco_total / 5)} (sem juros)</option>
+                  <option value={6} className="text-gray-900 bg-white">6x de {AsaasUtils.formatCurrency(plano.preco_total / 6)} (sem juros)</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  💳 Sem juros nas primeiras 6 parcelas
+                </p>
+              </div>
+            </div>
+
+            {/* Botão para processar pagamento */}
+            <Button 
+              onClick={processPayment}
+              disabled={loading || !formData.numeroCartao || !formData.nomeCartao || !formData.validadeMM || !formData.validadeAA || !formData.cvv}
+              className="w-full h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-xl border-2 border-green-400/40 hover:border-green-300/60 transition-all duration-200 hover:shadow-2xl disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Processando...
+                </>
+              ) : (
+                <>
+                  Finalizar Pagamento - {AsaasUtils.formatCurrency(plano.preco_total)} 💳
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+
+        {/* Step 4: Processamento */}
         {step === 'processing' && (
           <div className="text-center space-y-6">
             <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
@@ -768,7 +1021,7 @@ export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess
           </div>
         )}
 
-        {/* Step 4: PIX */}
+        {/* Step 5: PIX */}
         {step === 'pix' && pixData && (
           <div className="text-center space-y-6">
             <div className="flex items-center justify-center space-x-2">
@@ -821,7 +1074,7 @@ export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess
           </div>
         )}
 
-        {/* Step 5: Sucesso */}
+        {/* Step 6: Sucesso */}
         {step === 'success' && (
           <div className="text-center space-y-6">
             <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
