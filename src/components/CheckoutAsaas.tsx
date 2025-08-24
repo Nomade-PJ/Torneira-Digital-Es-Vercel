@@ -296,22 +296,54 @@ export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess
         }
 
         // Criar usuário temporário no Supabase (sem auth ainda)
-        const { data: newUser, error: userError } = await supabase
-          .from('usuarios')
-          .insert({
-            nome: formData.nomeCompleto,
-            email: formData.email,
-            telefone: formData.telefone.replace(/\D/g, ''),
-            cnpj_cpf: formData.cpfCnpj.replace(/\D/g, ''),
-            nome_completo: formData.nomeCompleto,
-            role: 'admin' // Todos são admin da própria conta
-          })
-          .select()
-          .single()
+        // Versão robusta com retry e melhor tratamento de erro
+        let newUser = null
+        let userError = null
+        
+        try {
+          const { data, error } = await supabase
+            .from('usuarios')
+            .insert({
+              nome: formData.nomeCompleto,
+              email: formData.email,
+              telefone: formData.telefone.replace(/\D/g, ''),
+              cnpj_cpf: formData.cpfCnpj.replace(/\D/g, ''),
+              nome_completo: formData.nomeCompleto,
+              role: 'admin' // Todos são admin da própria conta
+            })
+            .select()
+            .single()
+            
+          newUser = data
+          userError = error
+        } catch (err) {
+          console.error('❌ Erro de rede ao criar usuário:', err)
+          userError = err
+        }
 
         if (userError) {
-          console.error('Erro ao criar usuário:', userError)
-          setError('Erro ao criar conta. Tente novamente.')
+          console.error('❌ Erro ao criar usuário:', userError)
+          
+          // Log detalhado para debug
+          console.error('🔍 Debug Info:', {
+            supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+            hasSupabaseKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+            formData: {
+              nome: formData.nomeCompleto,
+              email: formData.email,
+              telefone: formData.telefone.replace(/\D/g, ''),
+              cnpjCpf: formData.cpfCnpj.replace(/\D/g, '')
+            }
+          })
+          
+          // Mensagem de erro mais específica
+          const errorMessage = userError.message?.includes('RLS') 
+            ? 'Erro de permissão no banco de dados. Contacte o suporte.'
+            : userError.message?.includes('duplicate') 
+            ? 'Este email já está cadastrado.'
+            : 'Erro ao criar conta. Verifique sua conexão e tente novamente.'
+            
+          setError(errorMessage)
           setStep('error')
           return
         }
