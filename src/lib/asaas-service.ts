@@ -119,14 +119,14 @@ class AsaasService {
   private environment: 'sandbox' | 'production'
 
   constructor() {
-    // Por padrão sandbox - será alterado quando você configurar
-    this.environment = 'sandbox'
+    // Configuração baseada nas variáveis de ambiente do Vite
+    this.environment = (import.meta.env.VITE_ASAAS_ENVIRONMENT || 'sandbox') as 'sandbox' | 'production'
     this.baseURL = this.environment === 'sandbox' 
       ? 'https://sandbox.asaas.com/api/v3'
       : 'https://www.asaas.com/api/v3'
     
-    // API Key será configurada depois que você criar a conta
-    this.apiKey = process.env.NEXT_PUBLIC_ASAAS_API_KEY || 'SUA_API_KEY_AQUI'
+    // API Key do ambiente configurado
+    this.apiKey = import.meta.env.VITE_ASAAS_API_KEY || 'SUA_API_KEY_AQUI'
   }
 
   // Headers padrão para as requisições

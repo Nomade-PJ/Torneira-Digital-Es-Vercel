@@ -3,12 +3,12 @@
 
 export const asaasConfig = {
   // Ambiente: 'sandbox' para testes, 'production' para produção
-  environment: process.env.NODE_ENV === 'production' ? 'production' : 'sandbox',
+  environment: import.meta.env.VITE_ASAAS_ENVIRONMENT || 'sandbox',
   
   // API Keys - Configure essas variáveis no .env
   apiKey: {
-    sandbox: process.env.NEXT_PUBLIC_ASAAS_SANDBOX_API_KEY || 'SUA_API_KEY_SANDBOX_AQUI',
-    production: process.env.NEXT_PUBLIC_ASAAS_PRODUCTION_API_KEY || 'SUA_API_KEY_PRODUCTION_AQUI'
+    sandbox: import.meta.env.VITE_ASAAS_API_KEY || 'SUA_API_KEY_SANDBOX_AQUI',
+    production: import.meta.env.VITE_ASAAS_API_KEY || 'SUA_API_KEY_PRODUCTION_AQUI'
   },
   
   // URLs base
@@ -20,9 +20,9 @@ export const asaasConfig = {
   // Webhook configuration
   webhook: {
     // URL que o Asaas vai chamar quando houver atualizações
-    url: process.env.NODE_ENV === 'production' 
-      ? 'https://seudominio.vercel.app/api/webhooks/asaas'
-      : 'https://seu-ngrok-url.ngrok.io/api/webhooks/asaas',
+    url: import.meta.env.VITE_ASAAS_ENVIRONMENT === 'production' 
+      ? 'https://www.torneira.digital/api/webhooks/asaas'
+      : 'https://www.torneira.digital/api/webhooks/asaas',
     
     // Eventos que queremos receber
     events: [
@@ -83,13 +83,13 @@ export const asaasConfig = {
   // Configurações do checkout
   checkout: {
     // URLs de redirecionamento
-    successUrl: process.env.NODE_ENV === 'production'
-      ? 'https://seudominio.vercel.app/vendas?payment=success'
-      : 'http://localhost:3000/vendas?payment=success',
+    successUrl: import.meta.env.VITE_ASAAS_ENVIRONMENT === 'production'
+      ? 'https://www.torneira.digital/vendas?payment=success'
+      : 'http://localhost:5173/vendas?payment=success',
     
-    errorUrl: process.env.NODE_ENV === 'production'
-      ? 'https://seudominio.vercel.app/planos?payment=error'
-      : 'http://localhost:3000/planos?payment=error',
+    errorUrl: import.meta.env.VITE_ASAAS_ENVIRONMENT === 'production'
+      ? 'https://www.torneira.digital/planos?payment=error'
+      : 'http://localhost:5173/planos?payment=error',
     
     // Configurações de expiração
     expirationTime: {
