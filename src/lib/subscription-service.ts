@@ -3,6 +3,7 @@
 
 import React from 'react'
 import { supabase } from './supabase'
+import { isSuperAdminEmail } from '../hooks/useSuperAdmin'
 
 export interface Assinatura {
   id: string
@@ -38,6 +39,39 @@ class SubscriptionService {
   // Verificar status da assinatura do usuário
   async getUserSubscriptionStatus(userId: string): Promise<SubscriptionStatus> {
     try {
+      // Primeiro, verificar se é super admin por email
+      const { data: user, error: userError } = await supabase
+        .from('usuarios')
+        .select('email, role')
+        .eq('id', userId)
+        .single()
+
+      if (!userError && user) {
+        // Verificar se é super admin
+        if (isSuperAdminEmail(user.email) || user.role === 'super_admin') {
+          return {
+            hasActiveSubscription: true,
+            isExpired: false,
+            isTrialPeriod: false,
+            canAccessSystem: true,
+            limitationMessage: undefined,
+            subscription: {
+              id: 'super-admin',
+              usuario_id: userId,
+              plano_id: 'super-admin',
+              status: 'ativa',
+              data_inicio: new Date().toISOString(),
+              data_vencimento: '2030-12-31T23:59:59.000Z',
+              valor_mensal: 0,
+              valor_total: 0,
+              desconto_percentual: 100,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            } as Assinatura
+          }
+        }
+      }
+
       // Buscar assinatura ativa mais recente
       const { data: subscription, error } = await supabase
         .from('assinaturas')
@@ -133,7 +167,7 @@ class SubscriptionService {
   }
 
   // Ativar assinatura após pagamento
-  async activateSubscription(subscriptionId: string, paymentData?: any): Promise<void> {
+  async activateSubscription(subscriptionId: string): Promise<void> {
     try {
       const nextDueDate = new Date()
       nextDueDate.setMonth(nextDueDate.getMonth() + 1)

@@ -251,7 +251,7 @@ class AsaasService {
     }
   }
 
-  // 6. CRIAR ASSINATURA RECORRENTE
+  // 6. CRIAR ASSINATURA RECORRENTE (OPCIONAL - Não usado no checkout atual)
   async createSubscription(customerData: AsaasCustomer, planData: {
     value: number
     cycle: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'SEMIANNUALLY' | 'YEARLY'
@@ -455,6 +455,80 @@ class AsaasService {
       console.error('Erro ao testar conexão:', error)
       return false
     }
+  }
+
+  // 9. VALIDAÇÕES ESPECÍFICAS ASAAS
+  
+  // Validar dados de cartão de crédito
+  validateCreditCard(cardData: {
+    holderName: string
+    number: string
+    expiryMonth: string
+    expiryYear: string
+    ccv: string
+  }): { isValid: boolean; errors: string[] } {
+    const errors: string[] = []
+
+    // Nome do portador
+    if (!cardData.holderName || cardData.holderName.length < 2) {
+      errors.push('Nome do portador é obrigatório')
+    }
+
+    // Número do cartão (básico)
+    const cardNumber = cardData.number.replace(/\D/g, '')
+    if (cardNumber.length < 13 || cardNumber.length > 19) {
+      errors.push('Número do cartão inválido')
+    }
+
+    // Mês
+    const month = parseInt(cardData.expiryMonth)
+    if (month < 1 || month > 12) {
+      errors.push('Mês de vencimento inválido')
+    }
+
+    // Ano
+    const year = parseInt(`20${cardData.expiryYear}`)
+    const currentYear = new Date().getFullYear()
+    if (year < currentYear || year > currentYear + 20) {
+      errors.push('Ano de vencimento inválido')
+    }
+
+    // CVV
+    if (!cardData.ccv || cardData.ccv.length < 3 || cardData.ccv.length > 4) {
+      errors.push('CVV inválido')
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    }
+  }
+
+  // Validar valor do pagamento
+  validatePaymentValue(value: number, billingType: string): { isValid: boolean; error?: string } {
+    // Valor mínimo R$ 1,00
+    if (value < 1) {
+      return { isValid: false, error: 'Valor mínimo é R$ 1,00' }
+    }
+
+    // Valor máximo PIX R$ 50.000,00
+    if (billingType === 'PIX' && value > 50000) {
+      return { isValid: false, error: 'Valor máximo para PIX é R$ 50.000,00' }
+    }
+
+    // Valor máximo cartão R$ 100.000,00
+    if (['CREDIT_CARD', 'DEBIT_CARD'].includes(billingType) && value > 100000) {
+      return { isValid: false, error: 'Valor máximo para cartão é R$ 100.000,00' }
+    }
+
+    return { isValid: true }
+  }
+
+  // Gerar referência externa única
+  generateExternalReference(prefix: string = 'TORNEIRA'): string {
+    const timestamp = Date.now()
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase()
+    return `${prefix}_${timestamp}_${random}`
   }
 }
 

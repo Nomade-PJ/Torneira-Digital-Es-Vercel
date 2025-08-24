@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuthContext } from '../components/providers/auth-provider'
+import { isSuperAdminEmail } from './useSuperAdmin'
 
 // Definição dos níveis hierárquicos dos planos
 export const NIVEIS_PLANO = {
@@ -76,6 +77,8 @@ export function usePermissionsHierarchical() {
         .from('usuarios')
         .select(`
           nome,
+          email,
+          role,
           status_assinatura,
           em_periodo_teste,
           data_fim_teste,
@@ -88,6 +91,24 @@ export function usePermissionsHierarchical() {
         .single()
 
       if (userError) throw userError
+
+      // Verificar se é super admin
+      const isSuperAdmin = isSuperAdminEmail(userData.email) || userData.role === 'super_admin'
+      
+      if (isSuperAdmin) {
+        setStatusPlano({
+          nomeUsuario: userData.nome || 'Super Admin',
+          nomePlano: 'Super Admin',
+          nivelPlano: 999, // Nível máximo
+          statusAssinatura: 'ativa',
+          emPeriodoTeste: false,
+          dataFimTeste: null,
+          dataVencimento: '2030-12-31T23:59:59.000Z',
+          diasRestantesTeste: null
+        })
+        setLoading(false)
+        return
+      }
 
       const plano = Array.isArray(userData.planos) ? userData.planos[0] : userData.planos
       const nomePlano = plano?.nome?.toLowerCase() || 'mensal'

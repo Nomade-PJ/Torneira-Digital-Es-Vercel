@@ -112,11 +112,13 @@ export function getCurrentAsaasConfig() {
   const env = asaasConfig.environment as 'sandbox' | 'production'
   
   return {
+    environment: env,
     apiKey: asaasConfig.apiKey[env],
     baseURL: asaasConfig.baseURL[env],
-    environment: env,
     isConfigured: asaasConfig.apiKey[env] !== `SUA_API_KEY_${env.toUpperCase()}_AQUI`,
-    ...asaasConfig
+    webhook: asaasConfig.webhook,
+    payment: asaasConfig.payment,
+    checkout: asaasConfig.checkout
   }
 }
 
@@ -129,11 +131,11 @@ export function validateAsaasConfig(): { isValid: boolean; errors: string[] } {
     errors.push(`API Key do ambiente ${config.environment} não configurada`)
   }
   
-  if (!config.company.document || config.company.document === '00.000.000/0001-00') {
+  if (!config.checkout.company?.document || config.checkout.company.document === '00.000.000/0001-00') {
     errors.push('CNPJ da empresa não configurado')
   }
   
-  if (!config.company.email || config.company.email === 'contato@torneiradigital.com') {
+  if (!config.checkout.company?.email || config.checkout.company.email === 'contato@torneiradigital.com') {
     errors.push('Email da empresa não configurado')
   }
   

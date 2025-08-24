@@ -11,9 +11,12 @@ export const getSupabaseClient = (): SupabaseClient => {
   if (!supabaseInstance) {
     supabaseInstance = createClient(supabaseUrl, supabaseKey, {
       auth: {
-        persistSession: false, // Evitar múltiplas instâncias
-        autoRefreshToken: false,
-        detectSessionInUrl: false
+        persistSession: true, // HABILITADO: manter sessão após reload
+        autoRefreshToken: true, // HABILITADO: atualizar token automaticamente
+        detectSessionInUrl: true, // HABILITADO: detectar sessão na URL
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        storageKey: 'torneira-digital-auth-token', // Chave personalizada
+        flowType: 'pkce' // Mais seguro para SPAs
       }
     })
   }

@@ -409,15 +409,15 @@ export default function ConfiguracoesPage() {
         </div>
         <div className="flex flex-col md:flex-row items-stretch md:items-center space-y-2 md:space-y-0 md:space-x-3">
           <Button 
-            className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white font-semibold h-12 px-6 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
+            className="bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white font-bold h-12 px-6 rounded-xl shadow-xl border-2 border-slate-400/30 hover:border-slate-300/50 transition-all duration-200 hover:shadow-2xl hover:scale-105"
             onClick={handleRestore}
             disabled={saving}
           >
             <RefreshCw className="w-5 h-5 mr-2" />
-            🔄 Restaurar Padrão
+            Restaurar Padrão
           </Button>
           <Button
-            className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-900 font-bold h-12 px-8 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
+            className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-900 font-bold h-12 px-8 rounded-xl shadow-xl border-2 border-amber-400/50 hover:border-amber-300 transition-all duration-200 hover:shadow-2xl hover:scale-105"
             onClick={handleSave}
             disabled={saving}
           >
@@ -426,7 +426,7 @@ export default function ConfiguracoesPage() {
             ) : (
               <Save className="w-5 h-5 mr-2" />
             )}
-            {saving ? "💾 Salvando..." : "💾 Salvar Configurações"}
+            {saving ? "Salvando..." : "Salvar Configurações"}
           </Button>
         </div>
       </div>
@@ -610,38 +610,38 @@ export default function ConfiguracoesPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Button
-                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold h-12 px-6 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
+                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold h-12 px-6 rounded-xl shadow-xl border-2 border-green-400/40 hover:border-green-300/60 transition-all duration-200 hover:shadow-2xl hover:scale-105"
                   onClick={handleExportData}
                   disabled={saving}
                 >
                   <Download className="w-5 h-5 mr-2" />
-                  📥 Exportar Dados
+                  Exportar Dados
                 </Button>
                 <Button
-                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold h-12 px-6 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
+                  className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold h-12 px-6 rounded-xl shadow-xl border-2 border-blue-400/40 hover:border-blue-300/60 transition-all duration-200 hover:shadow-2xl hover:scale-105"
                   onClick={handleImportData}
                   disabled={saving}
                 >
                   <Upload className="w-5 h-5 mr-2" />
-                  📤 Importar Dados
+                  Importar Dados
                 </Button>
               </div>
               
               <div className="flex justify-center">
                 <Button
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold h-12 px-8 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl min-w-[200px]"
+                  className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold h-12 px-8 rounded-xl shadow-xl border-2 border-purple-400/40 hover:border-purple-300/60 transition-all duration-200 hover:shadow-2xl hover:scale-105 min-w-[200px]"
                   onClick={executarBackupManual}
                   disabled={saving}
                 >
                   {saving ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      🔄 Executando...
+                      Executando...
                     </>
                   ) : (
                     <>
                       <Database className="w-5 h-5 mr-2" />
-                      💾 Backup Manual
+                      Backup Manual
                     </>
                   )}
                 </Button>

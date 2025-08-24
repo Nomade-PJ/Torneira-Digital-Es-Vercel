@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuthContext } from "../components/providers/auth-provider"
 import { Button } from "../components/ui/button"
@@ -84,9 +84,15 @@ export default function LandingPage() {
     }
   }
 
-  // Redirecionar se já estiver logado
+  // Redirecionar se já estiver logado (usando useEffect para evitar setState during render)
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/app/vendas")
+    }
+  }, [authLoading, user, navigate])
+
+  // Se estiver logado, não renderizar a landing page
   if (!authLoading && user) {
-    navigate("/app/vendas")
     return null
   }
 

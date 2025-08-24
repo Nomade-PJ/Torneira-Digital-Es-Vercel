@@ -30,28 +30,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Verificar sessão inicial simplificado
+    // Verificar sessão inicial
     const initializeAuth = async () => {
       try {
-
+        // Aguardar um pouco para o localStorage estar disponível
+        await new Promise(resolve => setTimeout(resolve, 100))
         
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
-          console.error('Erro ao obter sessão:', error)
-        }
-        
-        if (session?.user) {
-
+          setSession(null)
+          setUser(null)
+        } else if (session?.user) {
           setSession(session)
           setUser(session.user)
         } else {
-
           setSession(null)
           setUser(null)
         }
       } catch (error) {
-        console.error('Erro na inicialização:', error)
         setSession(null)
         setUser(null)
       } finally {
@@ -65,10 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      // console.log('Auth event:', event, 'Session:', !!session) // Desabilitado para produção
-      
       if (event === 'SIGNED_OUT') {
-        // Garantir limpeza completa no logout
         setSession(null)
         setUser(null)
       } else if (event === 'SIGNED_IN' && session) {
@@ -77,8 +71,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else if (event === 'TOKEN_REFRESHED' && session) {
         setSession(session)
         setUser(session.user)
+      } else if (event === 'INITIAL_SESSION' && session) {
+        setSession(session)
+        setUser(session.user)
       } else {
-        // Para outros eventos, usar a sessão recebida
         setSession(session)
         setUser(session?.user ?? null)
       }
@@ -89,23 +85,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Função de logout melhorada
+  // Função de logout
   const handleSignOut = async () => {
     try {
-      console.log('Iniciando logout...')
-      
       // Limpar estado local primeiro
       setUser(null)
       setSession(null)
       
       // Tentar fazer logout no Supabase com scope global
-      const { error } = await supabase.auth.signOut({ scope: 'global' })
-      
-      if (error) {
-        console.warn('Aviso no logout:', error.message)
-      } else {
-        console.log('Logout no Supabase realizado com sucesso')
-      }
+      await supabase.auth.signOut({ scope: 'global' })
       
       // Limpar cache local de forma mais agressiva
       if (typeof window !== 'undefined') {
@@ -136,12 +124,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             sessionStorage.removeItem(key)
           }
         })
-        
-        console.log('Cache local limpo')
       }
       
     } catch (error) {
-      console.warn('Erro no logout (não crítico):', error)
       // Mesmo com erro, limpar estado local
       setUser(null)
       setSession(null)

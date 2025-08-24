@@ -14,8 +14,7 @@ import {
   Loader2,
   Copy,
   Clock,
-  Shield,
-  CreditCard as CardIcon
+  Shield
 } from 'lucide-react'
 import { useAuthContext } from './providers/auth-provider'
 import { useToast } from './ui/use-toast'
@@ -494,38 +493,38 @@ export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess
             
             {/* PIX */}
             <Card 
-              className={`cursor-pointer transition-all ${paymentMethod === 'pix' ? 'ring-2 ring-green-500 bg-green-50' : 'hover:bg-gray-50'}`}
+              className={`cursor-pointer transition-all ${paymentMethod === 'pix' ? 'ring-4 ring-green-500 bg-gradient-to-br from-green-100 to-emerald-100 border-green-400 shadow-xl' : 'hover:bg-gradient-to-br hover:from-gray-50 hover:to-slate-50 hover:shadow-lg border-gray-200'} rounded-xl`}
               onClick={() => setPaymentMethod('pix')}
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <QrCode className="w-6 h-6 text-green-600" />
+                    <QrCode className={`w-6 h-6 ${paymentMethod === 'pix' ? 'text-green-700' : 'text-green-600'}`} />
                     <div>
-                      <div className="font-semibold">PIX</div>
-                      <div className="text-sm text-gray-500">Pagamento instantâneo</div>
+                      <div className={`font-semibold ${paymentMethod === 'pix' ? 'text-green-900 font-bold' : 'text-slate-900'}`}>PIX</div>
+                      <div className={`text-sm ${paymentMethod === 'pix' ? 'text-green-800 font-medium' : 'text-gray-500'}`}>Pagamento instantâneo</div>
                     </div>
                   </div>
-                  <Badge className="bg-green-500">Mais barato</Badge>
+                  <Badge className={`${paymentMethod === 'pix' ? 'bg-green-600 text-white font-bold' : 'bg-green-500'}`}>Mais barato</Badge>
                 </div>
               </CardContent>
             </Card>
 
             {/* Cartão de Crédito */}
             <Card 
-              className={`cursor-pointer transition-all ${paymentMethod === 'cartao_credito' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:bg-gray-50'}`}
+              className={`cursor-pointer transition-all ${paymentMethod === 'cartao_credito' ? 'ring-4 ring-blue-500 bg-gradient-to-br from-blue-100 to-cyan-100 border-blue-400 shadow-xl' : 'hover:bg-gradient-to-br hover:from-gray-50 hover:to-slate-50 hover:shadow-lg border-gray-200'} rounded-xl`}
               onClick={() => setPaymentMethod('cartao_credito')}
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <CreditCard className="w-6 h-6 text-blue-600" />
+                    <CreditCard className={`w-6 h-6 ${paymentMethod === 'cartao_credito' ? 'text-blue-700' : 'text-blue-600'}`} />
                     <div>
-                      <div className="font-semibold">Cartão de Crédito</div>
-                      <div className="text-sm text-gray-500">Aprovação instantânea</div>
+                      <div className={`font-semibold ${paymentMethod === 'cartao_credito' ? 'text-blue-900 font-bold' : 'text-slate-900'}`}>Cartão de Crédito</div>
+                      <div className={`text-sm ${paymentMethod === 'cartao_credito' ? 'text-blue-800 font-medium' : 'text-gray-500'}`}>Aprovação instantânea</div>
                     </div>
                   </div>
-                  <Badge variant="outline">Parcelável</Badge>
+                  <Badge className={`${paymentMethod === 'cartao_credito' ? 'bg-blue-600 text-white font-bold' : 'border-blue-300 text-blue-600'}`} variant={paymentMethod === 'cartao_credito' ? 'default' : 'outline'}>Parcelável</Badge>
                 </div>
               </CardContent>
             </Card>
@@ -534,7 +533,7 @@ export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess
 
             <Button 
               onClick={() => setStep('form')} 
-              className="w-full h-12 bg-green-600 hover:bg-green-700"
+              className="w-full h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-xl border-2 border-green-400/40 hover:border-green-300/60 transition-all duration-200 hover:shadow-2xl hover:scale-105"
             >
               Continuar com {paymentMethod === 'pix' ? 'PIX' : 'Cartão'}
             </Button>
@@ -720,7 +719,7 @@ export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess
             <Button 
               onClick={processPayment}
               disabled={loading}
-              className="w-full h-12 bg-green-600 hover:bg-green-700"
+              className="w-full h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-xl border-2 border-green-400/40 hover:border-green-300/60 transition-all duration-200 hover:shadow-2xl disabled:opacity-50 disabled:hover:scale-100"
             >
               {loading ? (
                 <>
@@ -850,7 +849,7 @@ export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess
 
             <Button 
               onClick={handleClose}
-              className="w-full bg-green-600 hover:bg-green-700"
+              className="w-full h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-xl border-2 border-green-400/40 hover:border-green-300/60 transition-all duration-200 hover:shadow-2xl hover:scale-105"
             >
               Ir para Login
             </Button>
