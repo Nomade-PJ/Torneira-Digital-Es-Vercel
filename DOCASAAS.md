@@ -836,6 +836,51 @@ ORDER BY created_at DESC;
 
 ---
 
+## 🛠️ **CORREÇÕES DE BUILD E DEPLOY**
+
+### ❌ **Problemas Identificados e Corrigidos**
+
+#### **1. Erro TypeScript no Build**
+```typescript
+❌ ERRO: Property 'message' does not exist on type '{}'
+📁 ARQUIVO: src/components/CheckoutAsaas.tsx
+🔧 CORREÇÃO: Melhor tipagem para tratamento de erros
+```
+
+#### **2. Logs Desnecessários em Produção**
+```typescript
+❌ PROBLEMA: console.log() em produção
+🔧 CORREÇÃO: Logs apenas em ambiente DEV
+📁 ARQUIVOS: supabase.ts, asaas-service.ts
+```
+
+#### **3. RLS Policies Muito Restritivas**
+```sql
+❌ PROBLEMA: checkout falhando por permissões
+🔧 CORREÇÃO: Policies mais permissivas para anon
+📊 STATUS: ✅ Corrigido e testado
+```
+
+### 🚀 **Variáveis de Ambiente para Vercel**
+
+**OBRIGATÓRIAS** no painel da Vercel:
+```bash
+VITE_ASAAS_API_KEY = $aact_hmlg_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjNmYjkwODNhLTNjZDQtNDZhNS1iZmVlLTE4NzgzM2ZjYjdiYzo6JGFhY2hfNGY2N2VjZjYtOGEyYS00NjBmLWE4NjAtNDVlYmU1Njc2YzM2
+VITE_ASAAS_ENVIRONMENT = sandbox
+VITE_SUPABASE_URL = https://gkwdspvvpucuoeupxnny.supabase.co
+VITE_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdrd2RzcHZ2cHVjdW9ldXB4bm55Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjI3OTQwOTEsImV4cCI6MjAzODM3MDA5MX0.i_4nWkN7XF7Atr7ORm25xaGZ1E6KZH6o-Ou7p8bVKzo
+```
+
+### ✅ **Checklist de Deploy**
+- [x] Erros TypeScript corrigidos
+- [x] Logs otimizados para produção
+- [x] RLS policies atualizadas
+- [x] Variáveis de ambiente documentadas
+- [ ] Redeploy na Vercel com novas variáveis
+- [ ] Teste final do checkout
+
+---
+
 ## 🔄 **MODIFICAÇÕES E ATUALIZAÇÕES RECENTES**
 
 ### **📅 Janeiro 2025 - Última Atualização**

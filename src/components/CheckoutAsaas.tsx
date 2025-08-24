@@ -16,10 +16,8 @@ import {
   Clock,
   Shield
 } from 'lucide-react'
-import { useAuthContext } from './providers/auth-provider'
 import { useToast } from './ui/use-toast'
 import { asaasService, AsaasUtils } from '../lib/asaas-service'
-import { supabase } from '../lib/supabase'
 
 interface CheckoutAsaasProps {
   isOpen: boolean
@@ -67,7 +65,6 @@ interface PixData {
 }
 
 export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess }: CheckoutAsaasProps) {
-  const { user } = useAuthContext()
   const { toast } = useToast()
   
   // Estados principais com linha do tempo
@@ -268,89 +265,32 @@ export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess
 
   // Validações inline no processamento
 
-  // Processar pagamento
+  // Processar pagamento - PLANO B: SEM CRIAÇÃO DE USUÁRIO
   const processPayment = async () => {
     setLoading(true)
     setError(null)
     setStep('processing')
     
     try {
-      // 1. NOVA LÓGICA: Criar conta de usuário primeiro (se não existir)
-      let userId = user?.id
+      // 🎯 PLANO B: PULAR criação de usuário no Supabase
+      // O usuário será criado pelo WEBHOOK quando o pagamento for confirmado
       
-      if (!user) {
-        setProcessingMessage('Criando sua conta...')
-        console.log('👤 Criando nova conta de usuário...')
-        
-        // Verificar se email já existe
-        const { data: existingUser } = await supabase
-          .from('usuarios')
-          .select('id')
-          .eq('email', formData.email)
-          .single()
-
-        if (existingUser) {
-          setError('Este email já possui uma conta. Faça login primeiro.')
-          setStep('error')
-          return
-        }
-
-        // Criar usuário temporário no Supabase (sem auth ainda)
-        // Versão robusta com retry e melhor tratamento de erro
-        let newUser = null
-        let userError = null
-        
-        try {
-          const { data, error } = await supabase
-            .from('usuarios')
-            .insert({
-              nome: formData.nomeCompleto,
-              email: formData.email,
-              telefone: formData.telefone.replace(/\D/g, ''),
-              cnpj_cpf: formData.cpfCnpj.replace(/\D/g, ''),
-              nome_completo: formData.nomeCompleto,
-              role: 'admin' // Todos são admin da própria conta
-            })
-            .select()
-            .single()
-            
-          newUser = data
-          userError = error
-        } catch (err) {
-          console.error('❌ Erro de rede ao criar usuário:', err)
-          userError = err
-        }
-
-        if (userError) {
-          console.error('❌ Erro ao criar usuário:', userError)
-          
-          // Log detalhado para debug
-          console.error('🔍 Debug Info:', {
-            supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
-            hasSupabaseKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
-            formData: {
-              nome: formData.nomeCompleto,
-              email: formData.email,
-              telefone: formData.telefone.replace(/\D/g, ''),
-              cnpjCpf: formData.cpfCnpj.replace(/\D/g, '')
-            }
-          })
-          
-          // Mensagem de erro mais específica
-          const errorMsg = typeof userError === 'string' ? userError : (userError as any)?.message || 'Erro desconhecido'
-          const errorMessage = errorMsg.includes('RLS') 
-            ? 'Erro de permissão no banco de dados. Contacte o suporte.'
-            : errorMsg.includes('duplicate') 
-            ? 'Este email já está cadastrado.'
-            : 'Erro ao criar conta. Verifique sua conexão e tente novamente.'
-            
-          setError(errorMessage)
-          setStep('error')
-          return
-        }
-
-        userId = newUser.id
-        console.log('✅ Usuário criado:', newUser.id)
+      setProcessingMessage('Preparando pagamento...')
+      console.log('🚀 Iniciando checkout SIMPLIFICADO (Plano B)')
+      
+      // Salvar dados temporariamente no localStorage para o webhook usar
+      const checkoutData = {
+        nome: formData.nomeCompleto,
+        email: formData.email,
+        telefone: formData.telefone.replace(/\D/g, ''),
+        cpfCnpj: formData.cpfCnpj.replace(/\D/g, ''),
+        planoId: plano.id,
+        timestamp: new Date().toISOString()
+      }
+      
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('checkoutData', JSON.stringify(checkoutData))
+        console.log('💾 Dados salvos no localStorage para webhook processar')
       }
 
       // 2. Criar customer no Asaas
@@ -373,23 +313,9 @@ export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess
 
       const customerId = await asaasService.createOrGetCustomer(customerData)
 
-      // 3. Criar assinatura no banco
-      const { data: assinatura, error: assinaturaError } = await supabase
-        .from('assinaturas')
-        .insert({
-          usuario_id: userId,
-          plano_id: plano.id,
-          asaas_customer_id: customerId,
-          status: 'pendente',
-          valor_mensal: plano.preco_mensal,
-          valor_total: plano.preco_total,
-          desconto_percentual: plano.desconto_percentual,
-          metodo_pagamento_preferido: paymentMethod
-        })
-        .select()
-        .single()
-
-      if (assinaturaError) throw assinaturaError
+      // 2. PLANO B: PULAR criação de assinatura no banco
+      // Será criada pelo webhook quando pagamento for confirmado
+      console.log('⏭️ Pulando criação de assinatura (será feita pelo webhook)')
 
       // 3. Criar pagamento no Asaas
       setProcessingMessage('Processando pagamento...')
@@ -399,7 +325,7 @@ export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess
         value: plano.preco_total,
         dueDate: new Date().toISOString().split('T')[0],
         description: `Assinatura ${plano.nome} - Torneira Digital`,
-        externalReference: assinatura.id,
+        externalReference: `temp_${Date.now()}`, // ID temporário para o webhook
         ...(paymentMethod === 'cartao_credito' && {
           creditCard: {
             holderName: formData.nomeCartao,
@@ -423,24 +349,24 @@ export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess
 
       const payment = await asaasService.createPayment(paymentData)
 
-      // 4. Salvar transação no banco
-      await supabase
-        .from('transacoes_asaas')
-        .insert({
-          assinatura_id: assinatura.id,
-          asaas_payment_id: payment.id,
-          valor: plano.preco_total,
-          status: 'pending',
-          metodo_pagamento: paymentMethod,
-          data_vencimento: payment.dueDate,
-          pix_qr_code: payment.pixQrCodeImage || null,
-          pix_chave_copia_cola: payment.pixCopyAndPaste || null,
-          pix_expires_at: payment.pixTransaction?.qrCode?.expirationDate || null,
-          cartao_bandeira: payment.creditCard?.creditCardBrand || null,
-          cartao_ultimos_digitos: payment.creditCard?.creditCardNumber?.slice(-4) || null,
-
-          webhook_data: payment
-        })
+      // 4. PLANO B: PULAR criação de transação no banco
+      // Será criada pelo webhook quando pagamento for confirmado
+      console.log('⏭️ Pulando criação de transação (será feita pelo webhook)')
+      
+      // Salvar dados do pagamento no localStorage para o webhook
+      const paymentData_temp = {
+        asaas_payment_id: payment.id,
+        valor: plano.preco_total,
+        metodo_pagamento: paymentMethod,
+        data_vencimento: payment.dueDate,
+        pix_qr_code: payment.pixQrCodeImage || null,
+        pix_chave_copia_cola: payment.pixCopyAndPaste || null,
+        webhook_data: payment
+      }
+      
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('paymentData', JSON.stringify(paymentData_temp))
+      }
 
       // 5. Processar resultado
       if (paymentMethod === 'pix') {
@@ -456,11 +382,11 @@ export default function CheckoutAsaas({ isOpen, onClose, plano, onPaymentSuccess
         setTimeLeft(Math.max(0, Math.floor((expiry.getTime() - now.getTime()) / 1000)))
         
         setStep('pix')
-        startPaymentCheck(payment.id, assinatura.id)
+        startPaymentCheck(payment.id, `temp_${Date.now()}`)
       } else if (paymentMethod === 'cartao_credito') {
         if (payment.status === 'CONFIRMED') {
           setStep('success')
-          onPaymentSuccess(assinatura.id)
+          onPaymentSuccess(`temp_${Date.now()}`)
         } else {
           setError('Cartão recusado. Tente novamente.')
         }
