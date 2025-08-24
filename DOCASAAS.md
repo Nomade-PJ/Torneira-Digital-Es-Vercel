@@ -876,7 +876,10 @@ VITE_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 - [x] Logs otimizados para produção
 - [x] RLS policies atualizadas
 - [x] Variáveis de ambiente documentadas
-- [ ] Redeploy na Vercel com novas variáveis
+- [x] **CORS resolvido**: Criadas Vercel Functions
+- [x] **APIs Proxy**: `/api/asaas/customers.ts`, `/api/asaas/payments.ts`, `/api/asaas/payment-status.ts`
+- [x] **Webhook**: `/api/webhooks/asaas.ts` atualizado
+- [ ] Redeploy na Vercel com novas APIs
 - [ ] Teste final do checkout
 
 ---

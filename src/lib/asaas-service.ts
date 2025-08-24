@@ -173,38 +173,56 @@ class AsaasService {
     }
   }
 
-  // 1. CRIAR OU BUSCAR CUSTOMER
+  // 1. CRIAR OU BUSCAR CUSTOMER - USANDO PROXY API
   async createOrGetCustomer(userData: AsaasCustomer): Promise<string> {
     try {
-      // Primeiro tenta buscar por CPF/CNPJ
-      const existingCustomers = await this.makeRequest(
-        `/customers?cpfCnpj=${userData.cpfCnpj}&limit=1`
-      )
-
-      if (existingCustomers.data && existingCustomers.data.length > 0) {
-        return existingCustomers.data[0].id
-      }
-
-      // Se não existir, criar novo
-      const newCustomer = await this.makeRequest('/customers', {
+      console.log('🔧 Criando customer via proxy API...')
+      
+      // Usar nossa API proxy para evitar CORS
+      const response = await fetch('/api/asaas/customers', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify(userData)
       })
 
-      return newCustomer.id
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Falha ao criar customer')
+      }
+
+      const customer = await response.json()
+      console.log('✅ Customer criado via proxy:', customer.id)
+      return customer.id
+
     } catch (error) {
-      console.error('Erro ao criar/buscar customer:', error)
+      console.error('❌ Erro ao criar customer via proxy:', error)
       throw error
     }
   }
 
-  // 2. CRIAR COBRANÇA (PIX, Cartão, Boleto)
+  // 2. CRIAR COBRANÇA (PIX, Cartão, Boleto) - USANDO PROXY API
   async createPayment(paymentData: AsaasPayment): Promise<AsaasWebhookPayload> {
     try {
-      const payment = await this.makeRequest('/payments', {
+      console.log('🔧 Criando pagamento via proxy API...')
+      
+      // Usar nossa API proxy para evitar CORS
+      const response = await fetch('/api/asaas/payments', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify(paymentData)
       })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Falha ao criar pagamento')
+      }
+
+      const payment = await response.json()
+      console.log('✅ Pagamento criado via proxy:', payment.id)
 
       // Se for PIX, buscar QR Code
       if (paymentData.billingType === 'PIX') {
@@ -243,9 +261,22 @@ class AsaasService {
   // 4. BUSCAR STATUS DO PAGAMENTO
   async getPaymentStatus(paymentId: string): Promise<AsaasWebhookPayload> {
     try {
-      return await this.makeRequest(`/payments/${paymentId}`)
+      console.log('🔧 Verificando status via proxy API...')
+      
+      // Usar nossa API proxy para evitar CORS
+      const response = await fetch(`/api/asaas/payment-status?paymentId=${paymentId}`)
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Falha ao verificar status')
+      }
+
+      const payment = await response.json()
+      console.log('✅ Status obtido via proxy:', payment.status)
+      return payment
+
     } catch (error) {
-      console.error('Erro ao buscar status do pagamento:', error)
+      console.error('❌ Erro ao buscar status via proxy:', error)
       throw error
     }
   }

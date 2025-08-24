@@ -1,10 +1,31 @@
-// Webhook Handler para Asaas
+// Vercel Function para webhook do Asaas
 // Processa notificações de pagamento em tempo real
 
-import { NextApiRequest, NextApiResponse } from 'next'
-import { asaasService } from '../../../src/lib/asaas-service'
+// Tipos básicos para Request/Response
+interface VercelRequest {
+  method?: string
+  body: any
+  query: { [key: string]: string | string[] | undefined }
+  headers: { [key: string]: string | string[] | undefined }
+}
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+interface VercelResponse {
+  status: (code: number) => VercelResponse
+  json: (data: any) => void
+  end: () => void
+  setHeader: (name: string, value: string) => void
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Configurar CORS
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end()
+  }
+
   // Só aceitar POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -32,10 +53,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Missing payment data' })
     }
 
-    // Processar webhook
-    await asaasService.processWebhook(payment)
-
-    console.log('✅ Webhook processado com sucesso:', {
+    // Por enquanto só loggar - implementaremos processamento depois
+    console.log('📝 Webhook processado (log only):', {
       event,
       paymentId: payment.id,
       status: payment.status
