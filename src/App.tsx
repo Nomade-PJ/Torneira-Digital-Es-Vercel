@@ -6,13 +6,17 @@ import { Toaster } from './components/ui/toaster'
 // 🔧 Importação das páginas
 import LandingPage from './pages/LandingPage'
 import PlanosPage from './pages/PlanosPage'
-import WhatsAppPage from './pages/WhatsAppPage'
+
 import LoginPage from './pages/LoginPage'
 import VendasPage from './pages/VendasPage'
 import EstoquePage from './pages/EstoquePage'
 import FluxoPage from './pages/FluxoPage'
 import RelatoriosPage from './pages/RelatoriosPage'
 import ConfiguracoesPage from './pages/ConfiguracoesPage'
+import PagamentoSucesso from './pages/PagamentoSucesso'
+import PagamentoErro from './pages/PagamentoErro'
+import PagamentoPendente from './pages/PagamentoPendente'
+import TrocarSenhaObrigatoria from './pages/TrocarSenhaObrigatoria'
 import ProtectedRoute from './components/ProtectedRoute'
 import AppLayout from './components/AppLayout'
 
@@ -26,8 +30,14 @@ function App() {
             {/* 🔧 Rotas públicas */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/planos" element={<PlanosPage />} />
-            <Route path="/whatsapp" element={<WhatsAppPage />} />
+
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/trocar-senha" element={<TrocarSenhaObrigatoria />} />
+            
+            {/* 🔧 Rotas de retorno do pagamento */}
+            <Route path="/pagamento/sucesso" element={<PagamentoSucesso />} />
+            <Route path="/pagamento/erro" element={<PagamentoErro />} />
+            <Route path="/pagamento/pendente" element={<PagamentoPendente />} />
             
             {/* 🔧 Rotas protegidas com layout */}
             <Route path="/app" element={

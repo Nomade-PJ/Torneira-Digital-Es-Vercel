@@ -17,12 +17,9 @@ import {
   Beer, 
   BarChart3, 
   Package, 
-  Users, 
   TrendingUp, 
-  Shield, 
   Smartphone,
   Check,
-  Star,
   PlayCircle,
   Zap,
   Target,
@@ -31,11 +28,7 @@ import {
   Lock,
   Mail,
   Coffee,
-  Printer,
-  Cloud,
-  CreditCard,
-  Settings,
-  FileText
+  CreditCard
 } from "lucide-react"
 
 export default function LandingPage() {
@@ -100,22 +93,17 @@ export default function LandingPage() {
     {
       icon: <Package className="w-8 h-8" />,
       title: "Controle de Estoque",
-      description: "Gerencie seu estoque em tempo real com alertas automáticos e relatórios detalhados."
+      description: "Gerencie seu estoque em tempo real com alertas automáticos."
     },
     {
       icon: <BarChart3 className="w-8 h-8" />,
       title: "Vendas Inteligentes",
-      description: "Sistema completo de vendas com múltiplas formas de pagamento e controle de comandas."
+      description: "Sistema completo de vendas com múltiplas formas de pagamento."
     },
     {
       icon: <Coffee className="w-8 h-8" />,
       title: "Gestão de Mesas",
-      description: "Controle completo de mesas e comandas com status em tempo real e histórico de ocupação."
-    },
-    {
-      icon: <Users className="w-8 h-8" />,
-      title: "Gestão de Clientes",
-      description: "Cadastro completo de clientes com histórico de compras e preferências."
+      description: "Controle completo de mesas e comandas em tempo real."
     },
     {
       icon: <TrendingUp className="w-8 h-8" />,
@@ -125,60 +113,16 @@ export default function LandingPage() {
     {
       icon: <CreditCard className="w-8 h-8" />,
       title: "Pagamentos Múltiplos",
-      description: "Aceite dinheiro, cartão, PIX e outras formas de pagamento de forma integrada."
-    },
-    {
-      icon: <Printer className="w-8 h-8" />,
-      title: "Impressão Térmica",
-      description: "Integração com impressoras térmicas para comandas e cupons fiscais automáticos."
-    },
-    {
-      icon: <Cloud className="w-8 h-8" />,
-      title: "Backup Automático",
-      description: "Seus dados sempre seguros com backup automático na nuvem e sincronização em tempo real."
-    },
-    {
-      icon: <Settings className="w-8 h-8" />,
-      title: "Configurações Avançadas",
-      description: "Personalize o sistema conforme suas necessidades com configurações flexíveis."
-    },
-    {
-      icon: <FileText className="w-8 h-8" />,
-      title: "Exportação de Dados",
-      description: "Exporte relatórios e dados em diversos formatos (PDF, Excel, CSV) para análises externas."
+      description: "Aceite dinheiro, cartão, PIX e outras formas de pagamento."
     },
     {
       icon: <Smartphone className="w-8 h-8" />,
       title: "100% Responsivo",
       description: "Acesse de qualquer dispositivo - computador, tablet ou smartphone."
-    },
-    {
-      icon: <Shield className="w-8 h-8" />,
-      title: "Seguro e Confiável",
-      description: "Seus dados protegidos com criptografia e backup automático na nuvem."
     }
   ]
 
-  const testimonials = [
-    {
-      name: "Carlos Silva",
-      business: "Cervejaria Artesanal SP",
-      avatar: "🍺",
-      text: "Revolucionou a gestão do meu bar! Agora tenho controle total do estoque e vendas em tempo real."
-    },
-    {
-      name: "Ana Costa",
-      business: "Choperia Família",
-      avatar: "🍻",
-      text: "Interface muito intuitiva. Meus funcionários aprenderam a usar em poucos minutos."
-    },
-    {
-      name: "Roberto Lima",
-      business: "Bar do Roberto",
-      avatar: "🥃",
-      text: "Os relatórios me ajudaram a aumentar o faturamento em 30% no primeiro mês!"
-    }
-  ]
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
@@ -258,21 +202,7 @@ export default function LandingPage() {
             </Button>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-amber-400 mb-2">500+</div>
-              <div className="text-slate-400">Estabelecimentos ativos</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-purple-400 mb-2">99.9%</div>
-              <div className="text-slate-400">Uptime garantido</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-blue-400 mb-2">24/7</div>
-              <div className="text-slate-400">Suporte disponível</div>
-            </div>
-          </div>
+
         </section>
 
         {/* Features Section */}
@@ -307,45 +237,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Testimonials Section */}
-        <section className="py-20 px-6 max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-slate-100 mb-4">
-              O que nossos clientes dizem
-            </h2>
-            <p className="text-xl text-slate-400">
-              Depoimentos reais de quem já transformou seu negócio
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="bg-slate-800/50 backdrop-blur-xl border-slate-700/50 hover:border-amber-500/30 transition-all duration-300">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 flex items-center justify-center text-2xl">
-                      {testimonial.avatar}
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg text-slate-100">{testimonial.name}</CardTitle>
-                      <CardDescription className="text-amber-400 font-medium">{testimonial.business}</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex mb-3">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-slate-300 italic leading-relaxed">
-                    "{testimonial.text}"
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
 
         {/* CTA Section */}
         <section className="py-20 px-6 max-w-4xl mx-auto text-center">

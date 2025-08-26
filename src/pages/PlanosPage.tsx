@@ -1,16 +1,13 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
 import { Button } from "../components/ui/button"
 import { Card, CardContent } from "../components/ui/card"
 import { Badge } from "../components/ui/badge"
 import { Beer, Crown, Sparkles, Star, Zap, ArrowRight, CreditCard } from "lucide-react"
-import CheckoutAsaas from "../components/CheckoutAsaas"
+import { getAsaasLink } from "../lib/asaas-links"
 import { useToast } from "../components/ui/use-toast"
 
 export default function PlanosPage() {
   const [modalidadeSelecionada, setModalidadeSelecionada] = useState<'mensal' | 'semestral' | 'anual'>('mensal')
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
-  const navigate = useNavigate()
   const { toast } = useToast()
 
   // NOVA LÓGICA: Produto único com 3 modalidades de pagamento
@@ -51,21 +48,34 @@ export default function PlanosPage() {
   }
 
   const handleSelecionarModalidade = () => {
-    // NOVA LÓGICA: Sempre abrir checkout, mesmo sem login
-    // O checkout vai coletar dados pessoais e criar conta automaticamente
-    console.log('🛒 Abrindo checkout para:', modalidadeAtual.nome)
-    setIsCheckoutOpen(true)
+    // NOVA LÓGICA: Redirecionar diretamente para Asaas (sem modal intermediário)
+    console.log('🚀 Redirecionando diretamente para Asaas:', modalidadeAtual.nome)
+    
+    // Salvar contexto do plano para o webhook
+    const checkoutContext = {
+      planoId: modalidadeAtual.id,
+      planoNome: modalidadeAtual.nome,
+      valor: modalidadeAtual.preco_total,
+      timestamp: new Date().toISOString(),
+      source: 'torneira-digital-direct'
+    }
+    
+    localStorage.setItem('checkout-context', JSON.stringify(checkoutContext))
+    
+    // Redirecionar diretamente para o link do Asaas
+    const asaasLink = getAsaasLink(modalidadeAtual.id)
+    if (asaasLink?.url) {
+      window.location.href = asaasLink.url
+    } else {
+      toast({
+        title: "❌ Erro",
+        description: "Link de pagamento não encontrado para este plano.",
+        variant: "destructive"
+      })
+    }
   }
 
-  const handlePaymentSuccess = () => {
-    toast({
-      title: "🎉 Pagamento Confirmado!",
-      description: `Sua conta foi criada! Faça login para acessar o sistema.`,
-    })
-    
-    // Redirecionar para login com mensagem de sucesso
-    navigate('/login?payment=success&plan=' + modalidadeAtual.nome)
-  }
+
 
   const modalidadeAtual = modalidades[modalidadeSelecionada]
 
@@ -242,13 +252,7 @@ export default function PlanosPage() {
         </div>
       </div>
 
-      {/* Checkout Modal */}
-      <CheckoutAsaas 
-        isOpen={isCheckoutOpen}
-        onClose={() => setIsCheckoutOpen(false)}
-        plano={modalidadeAtual}
-        onPaymentSuccess={handlePaymentSuccess}
-      />
+
     </div>
   )
 }

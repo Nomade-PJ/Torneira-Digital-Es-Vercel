@@ -14,8 +14,8 @@ import {
 } from 'lucide-react'
 import { useAuthContext } from './providers/auth-provider'
 import { subscriptionService, useSubscriptionStatus } from '../lib/subscription-service'
-import { AsaasUtils } from '../lib/asaas-service'
-import CheckoutAsaas from './CheckoutAsaas'
+import { formatCurrency, getAsaasLink } from '../lib/asaas-links'
+
 import { useToast } from './ui/use-toast'
 
 export default function GerenciarAssinatura() {
@@ -23,8 +23,7 @@ export default function GerenciarAssinatura() {
   const { toast } = useToast()
   const { status, loading, refresh } = useSubscriptionStatus(user?.id)
   const [showPlans, setShowPlans] = useState(false)
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
-  const [selectedPlan, setSelectedPlan] = useState<any>(null)
+
   const [transactions, setTransactions] = useState<any[]>([])
 
   // Planos disponíveis
@@ -72,18 +71,29 @@ export default function GerenciarAssinatura() {
   }
 
   const handleUpgradePlan = (plano: any) => {
-    setSelectedPlan(plano)
-    setIsCheckoutOpen(true)
-  }
-
-  const handlePaymentSuccess = () => {
-    toast({
-      title: '🎉 Plano Atualizado!',
-      description: 'Seu plano foi alterado com sucesso.'
-    })
-    setIsCheckoutOpen(false)
-    setShowPlans(false)
-    refresh()
+    // Redirecionar diretamente para Asaas sem modal intermediário
+    const asaasLink = getAsaasLink(plano.id)
+    if (asaasLink?.url) {
+      // Salvar contexto do upgrade
+      const upgradeContext = {
+        planoId: plano.id,
+        planoNome: plano.nome,
+        valor: plano.preco_total,
+        isUpgrade: true,
+        userId: user?.id,
+        timestamp: new Date().toISOString()
+      }
+      localStorage.setItem('upgrade-context', JSON.stringify(upgradeContext))
+      
+      // Redirecionar para Asaas
+      window.location.href = asaasLink.url
+    } else {
+      toast({
+        title: "❌ Erro",
+        description: "Link de pagamento não encontrado para este plano.",
+        variant: "destructive"
+      })
+    }
   }
 
   const formatStatus = (status: string) => {
@@ -158,7 +168,7 @@ export default function GerenciarAssinatura() {
             </div>
             <div>
               <p className="text-sm text-gray-500">Valor Mensal</p>
-              <p className="font-semibold">{AsaasUtils.formatCurrency(subscription.valor_mensal)}</p>
+              <p className="font-semibold">{formatCurrency(subscription.valor_mensal)}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Vencimento</p>
@@ -242,11 +252,11 @@ export default function GerenciarAssinatura() {
                   <CardContent>
                     <div className="space-y-2">
                       <div className="text-2xl font-bold text-green-600">
-                        {AsaasUtils.formatCurrency(plano.preco_mensal)}/mês
+                        {formatCurrency(plano.preco_mensal)}/mês
                       </div>
                       {plano.duracao_meses > 1 && (
                         <div className="text-sm text-gray-500">
-                          Total: {AsaasUtils.formatCurrency(plano.preco_total)}
+                          Total: {formatCurrency(plano.preco_total)}
                         </div>
                       )}
                       <div className="text-sm text-gray-600">
@@ -291,7 +301,7 @@ export default function GerenciarAssinatura() {
                       ${transaction.status === 'overdue' ? 'bg-red-500' : ''}
                     `} />
                     <div>
-                      <p className="font-medium">{AsaasUtils.formatCurrency(transaction.valor)}</p>
+                      <p className="font-medium">{formatCurrency(transaction.valor)}</p>
                       <p className="text-sm text-gray-500">
                         {transaction.metodo_pagamento.toUpperCase()} • {' '}
                         {subscriptionService.formatDateForDisplay(transaction.created_at)}
@@ -310,15 +320,7 @@ export default function GerenciarAssinatura() {
         </Card>
       )}
 
-      {/* Checkout Modal */}
-      {selectedPlan && (
-        <CheckoutAsaas 
-          isOpen={isCheckoutOpen}
-          onClose={() => setIsCheckoutOpen(false)}
-          plano={selectedPlan}
-          onPaymentSuccess={handlePaymentSuccess}
-        />
-      )}
+
     </div>
   )
 }

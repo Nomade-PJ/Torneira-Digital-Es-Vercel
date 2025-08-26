@@ -28,10 +28,13 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!user) {
-
     return <Navigate to="/login" replace />
   }
 
+  // Verificar se é primeiro acesso e precisa trocar senha
+  if (user.user_metadata?.primeiro_acesso === true) {
+    return <Navigate to="/trocar-senha" replace />
+  }
 
   return <>{children}</>
 }
