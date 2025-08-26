@@ -1,172 +1,127 @@
-# 🍺 Torneira Digital - Sistema PDV & ERP
+# 🚀 Torneira Digital
 
-Sistema completo de **Ponto de Venda (PDV)** e **ERP** desenvolvido especificamente para bares, restaurantes, cervejarias e estabelecimentos comerciais. Uma solução moderna e intuitiva para gestão completa do seu negócio.
+Sistema completo de gestão empresarial com integração híbrida de pagamentos via Asaas.
 
-![Status](https://img.shields.io/badge/Status-Ativo-green) ![Versão](https://img.shields.io/badge/Versão-2.0.0-blue) ![React](https://img.shields.io/badge/React-18+-blue) ![Vite](https://img.shields.io/badge/Vite-5+-purple) ![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue) ![Supabase](https://img.shields.io/badge/Supabase-Backend-green)
+## ✨ Funcionalidades
 
-## ✨ **Principais Diferenciais**
+- **💰 Gestão de Vendas** - Controle completo de transações
+- **📦 Controle de Estoque** - Gerenciamento de produtos e estoque  
+- **💳 Pagamentos Híbridos** - Integração direta com Asaas (PIX, Cartão, Boleto)
+- **📊 Fluxo de Caixa** - Acompanhamento financeiro em tempo real
+- **📈 Relatórios** - Dashboards e análises detalhadas
+- **⚙️ Configurações** - Personalização completa do sistema
 
-- 🎨 **Interface Moderna:** Design intuitivo e responsivo
-- ⚡ **Performance Otimizada:** Carregamento rápido e fluido
-- 🔐 **Segurança Avançada:** Autenticação robusta e proteção de dados
-- 📱 **Multi-plataforma:** Funciona em desktop, tablet e mobile
-- 🖨️ **Impressão Profissional:** Notas fiscais no padrão NFC
-- 🔄 **Tempo Real:** Sincronização instantânea entre dispositivos
+## 🛠️ Tecnologias
 
-## 🎯 **Funcionalidades Principais**
+- **Frontend**: React + TypeScript + Vite
+- **Backend**: Next.js API Routes
+- **Banco de Dados**: Supabase (PostgreSQL)
+- **Pagamentos**: Asaas (Solução Híbrida)
+- **UI/UX**: Tailwind CSS + shadcn/ui
+- **Deploy**: Vercel
 
-### 🛒 **PDV - Ponto de Venda**
-- **Vendas Diretas:** Sistema de balcão rápido com impressão automática de cupons
-- **Controle de Mesas:** Gestão visual intuitiva (Livre/Ocupada/Reservada/Manutenção)  
-- **Sistema de Comandas:** Números personalizáveis, dados completos do cliente
-- **Múltiplas Formas de Pagamento:** Dinheiro, PIX, Cartão de Débito/Crédito, Transferência
-- **Sistema de Descontos:** Flexível para vendas diretas e comandas
-- **Carrinho Inteligente:** Adição rápida de produtos com busca e categorização
+## 🚀 Instalação e Configuração
 
-### 📦 **Gestão de Estoque**
-- **Catálogo Completo:** Produtos com fotos, preços, categorias e variações
-- **Controle de Estoque:** Monitoramento em tempo real (atual, mínimo, crítico)
-- **Scanner de Códigos:** Leitor de código de barras integrado
-- **Alertas Inteligentes:** Notificações automáticas de estoque baixo/crítico
-- **Fornecedores:** Cadastro e gestão de fornecedores
-- **Histórico:** Rastreamento completo de movimentações
-
-### 📊 **Relatórios e Analytics**
-- **Dashboard Executivo:** KPIs principais em tempo real
-- **Análise de Vendas:** Receita, produtos vendidos, ticket médio
-- **Gráficos Interativos:** Vendas por período, produtos mais vendidos
-- **Relatórios Detalhados:** Exportação em PDF profissional
-- **Análise de Performance:** Produtos, categorias e períodos
-- **Fluxo de Caixa:** Controle financeiro completo
-
-## 🚀 **Instalação**
-
+### 1. **Clone o projeto**
 ```bash
-git clone https://github.com/Nomade-PJ/Torneira-Digital-Es-Vercel.git
-cd Torneira-Digital-Es-Vercel
+git clone https://github.com/seu-usuario/torneira-digital.git
+cd torneira-digital
+```
+
+### 2. **Instale as dependências**
+```bash
 npm install
 ```
 
-### 🔧 **Configuração de Ambiente**
-
-#### **Pré-requisitos:**
-- Node.js 18+ instalado
-- Conta no [Supabase](https://supabase.com) (gratuita)
-- Conta no [Vercel](https://vercel.com) (opcional para deploy)
-
-#### **Configuração do Banco de Dados:**
-1. **Crie um projeto no Supabase:**
-   - Acesse [supabase.com](https://supabase.com)
-   - Crie um novo projeto
-   - Anote a URL e a chave anônima do projeto
-
-2. **Configure as variáveis de ambiente:**
-   ```bash
-   # Crie um arquivo .env.local na raiz do projeto:
-   VITE_SUPABASE_URL=sua_url_do_supabase
-   VITE_SUPABASE_ANON_KEY=sua_chave_anonima_do_supabase
-   ```
-
-3. **Execute o projeto:**
-   ```bash
-   npm run dev
-   ```
-
-## 🚀 **Deploy na Vercel**
-
-### **Método Automático (Recomendado):**
-1. **Fork este repositório** para sua conta GitHub
-2. **Conecte à Vercel:**
-   - Acesse [vercel.com](https://vercel.com)
-   - Importe seu fork do repositório
-   - Configure as variáveis de ambiente (Supabase URL e Key)
-   - Deploy automático! 🎉
-
-### **Configuração das Variáveis:**
-No painel da Vercel, adicione as variáveis de ambiente:
-```
-VITE_SUPABASE_URL = [sua_url_do_supabase]
-VITE_SUPABASE_ANON_KEY = [sua_chave_anonima]
-```
-
-### **Deploy Manual:**
+### 3. **Configure as variáveis de ambiente**
 ```bash
-# Instalar Vercel CLI
-npm i -g vercel
+cp env.example .env
+```
 
-# Deploy
+Edite o arquivo `.env` com suas credenciais:
+```env
+# Supabase
+VITE_SUPABASE_URL=sua_url_do_supabase
+VITE_SUPABASE_ANON_KEY=sua_chave_anonima
+
+# Asaas (Opcional - para webhooks)
+ASAAS_WEBHOOK_TOKEN=seu_token_webhook
+```
+
+### 4. **Execute o projeto**
+```bash
+npm run dev
+```
+
+## 💳 Integração com Asaas
+
+Este projeto utiliza a **Solução Híbrida Asaas** para processar pagamentos:
+
+- ✅ **Redirecionamento direto** para checkout Asaas
+- ✅ **Webhook automático** para ativação de contas
+- ✅ **Suporte completo** a PIX, Cartão e Boleto
+- ✅ **Criação automática** de usuários pós-pagamento
+
+Para configurar os pagamentos, consulte: **[INTEGRACAO.md](./INTEGRACAO.md)**
+
+## 📁 Estrutura do Projeto
+
+```
+src/
+├── components/          # Componentes reutilizáveis
+├── pages/              # Páginas principais
+├── lib/                # Utilitários e configurações
+│   ├── supabase.ts     # Cliente Supabase
+│   └── asaas-links.ts  # Links de pagamento Asaas
+├── hooks/              # Hooks customizados
+└── types/              # Definições TypeScript
+
+api/
+└── webhooks/
+    └── asaas.ts        # Webhook para processar pagamentos
+```
+
+## 🔐 Segurança
+
+- ✅ Autenticação via Supabase Auth
+- ✅ Row Level Security (RLS) habilitado
+- ✅ Validação de dados no frontend e backend
+- ✅ Tokens de webhook protegidos
+- ✅ HTTPS obrigatório em produção
+
+## 📊 Fluxo de Pagamento
+
+1. **Cliente** seleciona plano na plataforma
+2. **Redirecionamento** direto para checkout Asaas
+3. **Pagamento** processado pelo Asaas
+4. **Webhook** confirma pagamento e ativa conta
+5. **Email** enviado com dados de acesso
+6. **Cliente** acessa sistema com credenciais
+
+## 🌐 Deploy
+
+### Vercel (Recomendado)
+```bash
+npm install -g vercel
 vercel --prod
 ```
 
-## 🛠️ **Tecnologias**
+### Variáveis de Ambiente na Vercel
+Configure no painel da Vercel:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `ASAAS_WEBHOOK_TOKEN`
 
-- ⚛️ **React 18** - Biblioteca JavaScript
-- ⚡ **Vite 5** - Build tool moderna
-- 🗄️ **Supabase** - Backend completo
-- 🎨 **Tailwind CSS** - Estilização  
-- 📊 **Recharts** - Gráficos
-- 🔐 **RLS** - Segurança de dados
-- 📱 **Radix UI** - Componentes acessíveis
+## 📞 Suporte
 
-## 📱 **Recursos Avançados**
+- **Email**: contato@torneira.digital
+- **Documentação**: [INTEGRACAO.md](./INTEGRACAO.md)
+- **Issues**: [GitHub Issues](https://github.com/seu-usuario/torneira-digital/issues)
 
-### 🖨️ **Sistema de Impressão**
-- **Impressão Térmica:** Cupons automáticos no padrão NFC brasileiro
-- **Notas Profissionais:** Layout similar ao cupom fiscal eletrônico
-- **Suporte Múltiplo:** Impressoras térmicas 80mm
-- **Preview Visual:** Visualização antes da impressão
+## 📄 Licença
 
-### 🔐 **Segurança e Autenticação**
-- **Login Seguro:** Sistema de autenticação robusto
-- **Recuperação de Senha:** Via email com validação
-- **Proteção de Dados:** Criptografia end-to-end
-- **Controle de Acesso:** Níveis de permissão por usuário
-
-### 📊 **Dashboard Inteligente**
-- **KPIs em Tempo Real:** Vendas, receita, produtos
-- **Gráficos Interativos:** Análise visual de performance
-- **Alertas Automáticos:** Estoque baixo, metas atingidas
-- **Relatórios Personalizáveis:** Exportação em PDF
-
-## 🎨 **Screenshots**
-
-*Em breve: Capturas de tela do sistema em funcionamento*
-
-## 🤝 **Contribuição**
-
-Contribuições são sempre bem-vindas! Para contribuir:
-
-1. **Fork** o projeto
-2. **Crie** uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. **Commit** suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. **Push** para a branch (`git push origin feature/AmazingFeature`)
-5. **Abra** um Pull Request
-
-## 📄 **Licença**
-
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
-
-## 📞 **Suporte**
-
-- 📧 **Email:** [seu-email@exemplo.com]
-- 💬 **Discord:** [Link do servidor]
-- 📱 **WhatsApp:** [Seu número]
-- 🐛 **Issues:** [GitHub Issues](https://github.com/Nomade-PJ/Torneira-Digital-Es-Vercel/issues)
-
-## 🏆 **Roadmap**
-
-### 🔄 **Próximas Versões:**
-- [ ] **App Mobile Nativo** (React Native)
-- [ ] **Integração com APIs** de pagamento (Mercado Pago, PagSeguro)
-- [ ] **Sistema de Delivery** integrado
-- [ ] **Programa de Fidelidade** para clientes
-- [ ] **Análise Avançada** com IA
-- [ ] **Multi-loja** - Gestão de múltiplos estabelecimentos
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
 ---
 
-## ⭐ **Se este projeto foi útil, deixe uma estrela!**
-
-**Transforme seu estabelecimento hoje mesmo!** 🚀
-
-*Desenvolvido para a comunidade brasileira de bares e restaurantes*
+**Desenvolvido com ❤️ para facilitar a gestão do seu negócio**
